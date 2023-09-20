@@ -2,14 +2,21 @@ use macroquad::prelude::*;
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    loop {
-        clear_background(RED);
+    // Load the image to be used as a background
+    let background_texture = load_texture("assets/road.png").await.expect("Failed to load image");
 
-        draw_line(40.0, 40.0, 100.0, 200.0, 15.0, BLUE);
-        draw_rectangle(screen_width() / 2.0 - 60.0, 100.0, 120.0, 60.0, GREEN);
-        draw_circle(screen_width() - 30.0, screen_height() - 30.0, 15.0, YELLOW);
+    loop {
+        clear_background(BLACK);
 
         draw_text("RustyCorks", 20.0, 20.0, 30.0, DARKGRAY);
+
+        // Draw the background image
+        draw_texture(
+            background_texture,
+            0.0,
+            0.0,
+            WHITE, // You can specify tint color if needed
+        );
 
         next_frame().await
     }
@@ -18,8 +25,8 @@ async fn main() {
 pub fn window_conf() -> Conf {
     Conf {
         window_title: "RustyCorks".to_string(),
-        window_width: 1024,
-        window_height: 512,
+        window_width: 1280 as i32,
+        window_height: 720,
         window_resizable: false,
         ..Default::default()
     }
