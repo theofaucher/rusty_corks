@@ -1,5 +1,12 @@
 use macroquad::prelude::*;
 
+#[derive(Debug)]
+struct Background {
+    texture: Texture2D,
+    position: Vec2,
+    speed: f32,
+}
+
 #[macroquad::main(window_conf())]
 async fn main() {
     // Load the image to be used as a background
@@ -11,15 +18,29 @@ async fn main() {
             return;
         }
     };
+    let mut background = Background {
+        texture: background_texture,
+        position: Vec2::new(0.0, 0.0),
+        speed: 500.0, // Réglez la vitesse de déplacement selon vos préférences
+    };
 
     loop {
-        // Draw the background image
-        draw_texture(
-            background_texture,
-            0.0,
-            0.0,
-            WHITE, // You can specify tint color if needed
-        );
+        draw_text("RustyCorks", 20.0, 20.0, 30.0, DARKGRAY);
+
+        let delta_time = get_frame_time();
+
+        // Mettez à jour la position du fond
+        background.position.x -= background.speed * delta_time;
+
+        // Créez un effet de boucle continue
+        if background.position.x < -screen_width() {
+            background.position.x = 0.0;
+        }
+
+        // Dessinez le fond
+        clear_background(BLACK);
+        draw_texture(background.texture, background.position.x, background.position.y, WHITE);
+        draw_texture(background.texture, background.position.x + screen_width(), background.position.y, WHITE);
 
         next_frame().await
     }
