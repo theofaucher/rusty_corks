@@ -1,4 +1,7 @@
 use macroquad::prelude::*;
+use crate::keyboard_observer::KeyboardObserver;
+
+mod keyboard_observer;
 
 #[derive(Debug)]
 struct Background {
@@ -9,7 +12,6 @@ struct Background {
 
 #[macroquad::main(window_conf())]
 async fn main() {
-    // Load the image to be used as a background
     let background_texture: Result<Texture2D, FileError> = load_texture("assets/road.png").await;
     let background_texture = match background_texture {
         Ok(background_texture) => background_texture,
@@ -23,6 +25,10 @@ async fn main() {
         position: Vec2::new(0.0, 0.0),
         speed: 500.0, // Réglez la vitesse de déplacement selon vos préférences
     };
+
+    let (sender, _receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
+    let observer = KeyboardObserver::new(sender);
+    observer.start_observer();
 
     loop {
         draw_text("RustyCorks", 20.0, 20.0, 30.0, DARKGRAY);
