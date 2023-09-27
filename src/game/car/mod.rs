@@ -1,8 +1,8 @@
 
 use macroquad::prelude::*;
 
-const PLAYER_CAR_HEIGHT: f32 = 73.0;
-const BOT_CAR_WIDTH: f32 = 160.0;
+pub const PLAYER_CAR_HEIGHT: f32 = 73.0;
+pub const BOT_CAR_WIDTH: f32 = 160.0;
 
 
 pub trait Car {
@@ -22,14 +22,25 @@ pub enum Way {
 }
 
 pub struct PlayerCar {
-    texture: Texture2D,
-    way: Way,
+    pub texture: Texture2D,
+    pub way: Way,
 }
 
 impl PlayerCar {
-    pub fn new(texture : Texture2D) -> PlayerCar {
-        PlayerCar { texture, way: Way::Center}
+    pub async fn new() -> Option<PlayerCar> {
+        let background_texture = load_texture("assets/playerCar.png").await;
+        match background_texture {
+            Ok(texture) => Some(PlayerCar {
+                texture,
+                way: Way::Center
+            }),
+            Err(e) => {
+                println!("Error loading texture: {}", e);
+                None
+            }
+        }
     }
+
     pub fn move_car(&mut self, dir: Direction) {
         match dir {
             Direction::Up => {
@@ -47,22 +58,34 @@ impl PlayerCar {
                 }
             },
         }
-        self.draw();
     }
 }
 
 #[derive(PartialEq)]
 pub struct BotCar {
-    texture: Texture2D,
-    way: Way,
+    pub texture: Texture2D,
+    pub way: Way,
     pub x_position: f32,
     speed: f32,
 }
 
 impl BotCar {
-    pub fn new(texture : Texture2D, way: Way, speed: f32) -> BotCar {
-        BotCar { texture, way, speed, x_position: screen_width()}
+    pub async fn new(way: Way, speed: f32) -> Option<BotCar> {
+        let background_texture = load_texture("assets/blackCar.png").await;
+        match background_texture {
+            Ok(texture) => Some(BotCar {
+                texture,
+                way,
+                speed,
+                x_position: screen_width()
+            }),
+            Err(e) => {
+                println!("Error loading texture: {}", e);
+                None
+            }
+        }
     }
+
     pub fn set_speed(&mut self, new_speed: f32) {
         {
             self.speed = new_speed;
