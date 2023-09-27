@@ -22,20 +22,29 @@ impl KeyboardObserver {
         }
     }
 
-    fn observer(sender: &Arc<Mutex<Sender<KeyCode>>>, key_states: &mut [KeyGame]) {
+    fn observer(sender: &Arc<Mutex<Sender<KeyCode>>>, keys_games: &mut [KeyGame]) {
         let mut key_pressed: Option<KeyCode> = None;
-        for key_state in key_states.iter() {
-            if key_state.is_key_pressed(){
-                key_pressed = Some(key_state.key);
+        for key_games in keys_games.iter() {
+            if key_games.is_key_pressed(){
+                key_pressed = Some(key_games.key);
                 break;
             }
 
         }
 
         if let Some(key) = key_pressed {
-            let send_status = sender.lock().unwrap().send(key);
-            if let Err(e) = send_status {
-                println!("Error sending key: {}", e);
+            let send_status_lock = sender.lock();
+
+            match send_status_lock {
+                Ok(send_status) => {
+                    let send_status = send_status.send(key);
+                    if let Err(e) = send_status {
+                        println!("Error sending key: {}", e);
+                    }
+                },
+                Err(e) => {
+                    println!("Error sending key: {}", e);
+                }
             }
         }
     }
@@ -45,11 +54,11 @@ impl KeyboardObserver {
         let running_clone = Arc::clone(&self.running);
 
         thread::spawn(move || {
-            let mut key_states: Vec<KeyGame> = Vec::new();
+            let mut keys_games: Vec<KeyGame> = Vec::new();
             let key_game = [KeyCode::Down, KeyCode::Up];
 
             for key in key_game.iter() {
-                key_states.push(KeyGame::new(*key));
+                keys_games.push(KeyGame::new(*key));
             }
 
             let timer_duration = Duration::from_millis(20);
@@ -57,12 +66,12 @@ impl KeyboardObserver {
 
 
             while running_clone.load(Ordering::Relaxed) {
-                for key_state in &mut key_states {
-                    let is_down = is_key_down(key_state.key);
-                    key_state.update(is_down);
+                for key_games in &mut keys_games {
+                    let is_down = is_key_down(key_games.key);
+                    key_games.update(is_down);
                 }
 
-                Self::observer(&sender_clone, &mut key_states);
+                Self::observer(&sender_clone, &mut keys_games);
 
                 let elapsed_time = last_time.elapsed();
 
