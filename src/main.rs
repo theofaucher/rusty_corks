@@ -1,10 +1,10 @@
-
 use macroquad::prelude::*;
-use crate::game::car::{BotCar, Car, PlayerCar, Way};
-use crate::keyboard_observer::KeyboardObserver;
+use crate::game::game::Game;
+use crate::game::graphics::graphics_manager::GraphicsManager;
+use crate::keyboard::keyboard_observer::KeyboardObserver;
 
-mod keyboard_observer;
 mod game;
+mod keyboard;
 
 struct Background {
     texture: Texture2D,
@@ -12,45 +12,43 @@ struct Background {
     speed: f32,
 }
 
+
 #[macroquad::main(window_conf())]
 async fn main() {
-
-    let graphics_manager = game::graphics_manager::GraphicsManager::new().await;
-    let mut game_manager = match graphics_manager {
+    let graphics_manager = GraphicsManager::new().await;
+    let mut graphics_manager = match graphics_manager {
         Some(game_manager) => game_manager,
         None => return,
     };
 
 
-    let player_car = PlayerCar::new().await;
-    let player_car = match player_car {
-        Some(player_car) => player_car,
-        None => return,
-    };
-
-    let red_car = BotCar::new( Way::Upper, game_manager.background.speed + 100.0).await;
-    let mut red_car = match red_car {
-        Some(red_car) => red_car,
-        None => return,
-    };
-
-    let (sender, _receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
+    let (sender, receiver) = std::sync::mpsc::channel::<macroquad::input::KeyCode>();
     let observer = KeyboardObserver::new(sender);
     observer.start_observer();
+
+    let game = Game::new(receiver).await;
+    let mut game = match game {
+        Some(game) => game,
+        None => return,
+    };
+
+    game.start();
 
     loop {
         let delta_time = get_frame_time();
 
-        game_manager.background.update_position(delta_time);
+        graphics_manager.background.update_position(delta_time);
 
-        // Mettez à jour la position de la voiture rouge
-        red_car.update_position(delta_time);
+        let player_car_lock = game.player_car.lock();
+        let player_car = match player_car_lock {
+            Ok(player_car) => player_car,
+            Err(e) => {
+                println!("Error lock player car: {}", e);
+                break;
+            }
+        };
 
-        if red_car.x_position > -screen_width() {
-            game_manager.draw_bot_car(&red_car);
-        }
-
-        game_manager.draw_player_car(&player_car);
+        graphics_manager.draw_player_car(player_car);
 
         next_frame().await;
     }

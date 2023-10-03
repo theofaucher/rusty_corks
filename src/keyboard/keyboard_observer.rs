@@ -5,9 +5,7 @@ use std::thread::{JoinHandle, sleep};
 use std::sync::mpsc::{Sender};
 use macroquad::input::{is_key_down, KeyCode};
 use std::time::{Duration, Instant};
-use crate::keyboard_observer::key_game::KeyGame;
-
-mod key_game;
+use crate::keyboard::key_game::KeyGame;
 
 pub struct KeyboardObserver {
     sender: Arc<Mutex<Sender<KeyCode>>>,

@@ -1,6 +1,4 @@
+pub mod game;
+
 pub mod car;
-pub mod graphics_manager;
-
-pub mod game {
-
-}
+pub mod graphics;
