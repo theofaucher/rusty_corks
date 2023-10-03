@@ -1,10 +1,13 @@
+
 use macroquad::prelude::*;
 use crate::game::game::Game;
 use crate::game::graphics::graphics_manager::GraphicsManager;
 use crate::keyboard::keyboard_observer::KeyboardObserver;
+use crate::utils::timer::TimerData;
 
 mod game;
 mod keyboard;
+mod utils;
 
 struct Background {
     texture: Texture2D,
@@ -12,9 +15,16 @@ struct Background {
     speed: f32,
 }
 
+fn callback_test(timer_data: &mut TimerData){
+    let TimerData::GameScore{ score: game_score} = timer_data;
+    *game_score += 1;
+    println!("Game score: {}", game_score);
+}
 
 #[macroquad::main(window_conf())]
 async fn main() {
+
+
     let graphics_manager = GraphicsManager::new().await;
     let mut graphics_manager = match graphics_manager {
         Some(game_manager) => game_manager,

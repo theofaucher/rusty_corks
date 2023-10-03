@@ -8,6 +8,7 @@ use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::car::Way;
 use crate::game::graphics::graphics_manager::GraphicsManager;
+use crate::utils::timer::{Timer, TimerData};
 
 
 pub struct Game {
@@ -16,7 +17,8 @@ pub struct Game {
     graphics_manager: GraphicsManager,
     pub player_car: Arc<Mutex<PlayerCar>>,
     bot_cars: Vec<BotCar>,
-    score: u32,
+    game_timer: Timer,
+    score: Arc<Mutex<u32>>,
 }
 
 impl Game {
@@ -27,20 +29,40 @@ impl Game {
             None => return None, // Return early if PlayerCar creation fails.
         };
 
-        graphics_manager.map(|graphics_manager| Game {
-            receiver_input: Arc::new(Mutex::new(receiver_key)),
-            running: Arc::new(AtomicBool::new(true)),
-            graphics_manager,
-            player_car,
-            bot_cars: Vec::new(),
-            score: 0,
-        })
+        let score = Arc::new(Mutex::new(0));
+        let score_lock = score.lock();
+
+        match score_lock {
+            Ok(score_lock) => {
+                graphics_manager.map(|graphics_manager| Game {
+                    receiver_input: Arc::new(Mutex::new(receiver_key)),
+                    running: Arc::new(AtomicBool::new(true)),
+                    graphics_manager,
+                    player_car,
+                    bot_cars: Vec::new(),
+                    game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore{ score: *score_lock }))),
+                    score: Arc::clone(&score),
+                })
+            }
+            Err(e) => {
+                println!("Error lock timer_data: {}", e);
+                None
+            }
+        }
+    }
+
+    fn add_score(timer_data: &mut TimerData) {
+        let TimerData::GameScore{ score: game_score} = timer_data;
+        *game_score += 1;
+        println!("Game score: {}", game_score);
     }
 
     pub fn start(&mut self) {
         let receiver_input_clone = Arc::clone(&self.receiver_input);
         let running_clone = Arc::clone(&self.running);
         let player_car_clone = Arc::clone(&self.player_car);
+
+        self.game_timer.start(500);
 
         thread::spawn(move || {
             Game::move_player_car(receiver_input_clone, running_clone, player_car_clone);
