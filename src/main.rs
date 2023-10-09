@@ -66,7 +66,6 @@ async fn main() {
             graphics_manager.draw_score(*current_score);
         }
 
-
         next_frame().await;
     }
 }
