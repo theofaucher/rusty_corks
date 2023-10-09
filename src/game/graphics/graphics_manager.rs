@@ -1,9 +1,10 @@
 use std::sync::MutexGuard;
+
 use macroquad::prelude::{draw_texture, screen_height, screen_width, Texture2D, WHITE};
+
 use crate::game::car::{PLAYER_CAR_HEIGHT, Way};
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
-
 use crate::game::graphics::background::Background;
 
 pub struct GraphicsManager {
@@ -39,5 +40,10 @@ impl GraphicsManager {
 
     pub fn draw_player_car(&self, player_car: MutexGuard<PlayerCar>) {
         self.draw_car(player_car.texture, &player_car.way, screen_width() / 4.0);
+    }
+
+    pub fn draw_score(&self, score: u32) {
+        let score_text = format!("Score: {}", score);
+        macroquad::text::draw_text(&score_text, 0.0, 60.0, 60.0, WHITE);
     }
 }

@@ -1,9 +1,8 @@
-
 use macroquad::prelude::*;
+
 use crate::game::game::Game;
 use crate::game::graphics::graphics_manager::GraphicsManager;
 use crate::keyboard::keyboard_observer::KeyboardObserver;
-use crate::utils::timer::TimerData;
 
 mod game;
 mod keyboard;
@@ -13,12 +12,6 @@ struct Background {
     texture: Texture2D,
     position: Vec2,
     speed: f32,
-}
-
-fn callback_test(timer_data: &mut TimerData){
-    let TimerData::GameScore{ score: game_score} = timer_data;
-    *game_score += 1;
-    println!("Game score: {}", game_score);
 }
 
 #[macroquad::main(window_conf())]
@@ -50,15 +43,29 @@ async fn main() {
         graphics_manager.background.update_position(delta_time);
 
         let player_car_lock = game.player_car.lock();
-        let player_car = match player_car_lock {
-            Ok(player_car) => player_car,
-            Err(e) => {
-                println!("Error lock player car: {}", e);
-                break;
-            }
-        };
+        {
+            let player_car = match player_car_lock {
+                Ok(player_car) => player_car,
+                Err(e) => {
+                    println!("Error lock player car: {}", e);
+                    break;
+                }
+            };
+            graphics_manager.draw_player_car(player_car);
+        }
 
-        graphics_manager.draw_player_car(player_car);
+        let current_score_lock = game.score.lock();
+        {
+            let current_score = match current_score_lock {
+                Ok(current_score) => current_score,
+                Err(e) => {
+                    println!("Error lock current score: {}", e);
+                    break;
+                }
+            };
+            graphics_manager.draw_score(*current_score);
+        }
+
 
         next_frame().await;
     }

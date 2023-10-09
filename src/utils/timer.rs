@@ -6,8 +6,9 @@ use std::time::{Duration, Instant};
 
 type TimerCallback = fn(timer_data: &mut TimerData);
 
+#[derive(Clone)] // Ajoutez cette dérivation pour le trait Copy
 pub enum TimerData {
-    GameScore { score: u32 },
+    GameScore { score: Arc<Mutex<u32>> },
 }
 
 pub struct Timer {

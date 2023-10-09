@@ -1,15 +1,16 @@
 use std::collections::HashMap;
-use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Receiver;
 use std::thread;
+
 use macroquad::input::KeyCode;
+
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::car::Way;
 use crate::game::graphics::graphics_manager::GraphicsManager;
 use crate::utils::timer::{Timer, TimerData};
-
 
 pub struct Game {
     receiver_input: Arc<Mutex<Receiver<KeyCode>>>,
@@ -18,7 +19,7 @@ pub struct Game {
     pub player_car: Arc<Mutex<PlayerCar>>,
     bot_cars: Vec<BotCar>,
     game_timer: Timer,
-    score: Arc<Mutex<u32>>,
+    pub score: Arc<Mutex<u32>>,
 }
 
 impl Game {
@@ -32,29 +33,35 @@ impl Game {
         let score = Arc::new(Mutex::new(0));
         let score_lock = score.lock();
 
-        match score_lock {
-            Ok(score_lock) => {
-                graphics_manager.map(|graphics_manager| Game {
-                    receiver_input: Arc::new(Mutex::new(receiver_key)),
-                    running: Arc::new(AtomicBool::new(true)),
-                    graphics_manager,
-                    player_car,
-                    bot_cars: Vec::new(),
-                    game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore{ score: *score_lock }))),
-                    score: Arc::clone(&score),
-                })
-            }
+        let _unused = match score_lock {
+            Ok(init_score) => init_score,
             Err(e) => {
-                println!("Error lock timer_data: {}", e);
-                None
+                println!("Error lock current score: {}", e);
+                return None;
             }
-        }
+        };
+
+        graphics_manager.map(| graphics_manager | Game {
+            receiver_input: Arc::new(Mutex::new(receiver_key)),
+            running: Arc::new(AtomicBool::new(true)),
+            graphics_manager,
+            player_car,
+            bot_cars: Vec::new(),
+            game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore { score: Arc::clone(&score) }))),
+            score: Arc::clone(&score),
+        })
     }
 
     fn add_score(timer_data: &mut TimerData) {
-        let TimerData::GameScore{ score: game_score} = timer_data;
-        *game_score += 1;
-        println!("Game score: {}", game_score);
+        let TimerData::GameScore { score: game_score } = timer_data;
+        let game_score_lock = game_score.lock();
+
+        match game_score_lock {
+            Ok(mut init_score) => *init_score += 1,
+            Err(e) => {
+                println!("Error lock current score: {}", e);
+            }
+        };
     }
 
     pub fn start(&mut self) {
