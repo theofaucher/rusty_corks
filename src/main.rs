@@ -24,31 +24,6 @@ async fn main() -> RustyResult<()> {
     }
 }
 
-// loop {
-//     let delta_time = get_frame_time();
-//
-//     graphics_manager.background.update_position(delta_time);
-//
-//     match game.player_car.lock() {
-//         Ok(player_car) => graphics_manager.draw_player_car(player_car),
-//         Err(e) => {
-//             println!("Error lock player car: {}", e);
-//             break;
-//         }
-//     };
-//
-//     match game.score.lock() {
-//         Ok(current_score) => graphics_manager.draw_score(*current_score),
-//         Err(e) => {
-//             println!("Error lock current score: {}", e);
-//             break;
-//         }
-//     };
-//
-//     next_frame().await;
-// }
-
-
 pub fn window_conf() -> Conf {
     Conf {
         window_title: "Rusty Corks".to_string(),

@@ -1,5 +1,6 @@
 use std::error;
 use std::fmt;
+use std::fmt::Debug;
 use std::sync::mpsc::TryRecvError;
 
 use macroquad::prelude::FileError;
@@ -15,13 +16,10 @@ pub enum RustyError {
 
 impl fmt::Display for RustyError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            RustyError::File(..) =>
-                write!(f, "Check the file path and try again"),
-            RustyError::Recv(..) =>
-                write!(f, "Receive channel error"),
+        match self {
             RustyError::RustyLock =>
                 write!(f, "Rusty lock error"),
+            _ => Ok(()),
         }
     }
 }
