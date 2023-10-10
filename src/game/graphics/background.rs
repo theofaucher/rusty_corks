@@ -1,5 +1,6 @@
-use macroquad::prelude::{draw_texture, load_texture, screen_width, Texture2D, Vec2, WHITE};
+use macroquad::prelude::{draw_texture, FileError, load_texture, screen_width, Texture2D, Vec2, WHITE};
 
+#[derive(Clone)]
 pub struct Background {
     pub texture: Texture2D,
     position: Vec2,
@@ -7,19 +8,13 @@ pub struct Background {
 }
 
 impl Background {
-    pub async fn new() -> Option<Background> {
-        let background_texture = load_texture("assets/road.png").await;
-        match background_texture {
-            Ok(texture) => Some(Background {
-                texture,
-                position: Vec2::new(0.0, 0.0),
-                speed: 300.0, // Réglez la vitesse de déplacement selon vos préférences
-            }),
-            Err(e) => {
-                println!("Error loading texture: {}", e);
-                None
-            }
-        }
+    pub async fn new() -> Result<Background, FileError> {
+        let background_texture = load_texture("assets/road.png").await?;
+        Ok(Background {
+            texture: background_texture,
+            position: Vec2::new(0.0, 0.0),
+            speed: 300.0, // Réglez la vitesse de déplacement selon vos préférences
+        })
     }
 
     pub fn update_position(&mut self, delta_time: f32) {

@@ -11,6 +11,7 @@ pub enum TimerData {
     GameScore { score: Arc<Mutex<u32>> },
 }
 
+#[derive(Clone)]
 pub struct Timer {
     callback: TimerCallback,
     timer_data: Arc<Mutex<TimerData>>,

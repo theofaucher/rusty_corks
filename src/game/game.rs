@@ -5,13 +5,23 @@ use std::sync::mpsc::Receiver;
 use std::thread;
 
 use macroquad::input::KeyCode;
+use macroquad::prelude::get_frame_time;
 
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::car::Way;
 use crate::game::graphics::graphics_manager::GraphicsManager;
+use crate::utils::rusty_error::{RustyError, RustyResult};
 use crate::utils::timer::{Timer, TimerData};
 
+#[derive(Clone)]
+enum GameState {
+    NotStarted,
+    Running,
+    GameOver,
+}
+
+#[derive(Clone)]
 pub struct Game {
     receiver_input: Arc<Mutex<Receiver<KeyCode>>>,
     running: Arc<AtomicBool<>>,
@@ -20,35 +30,26 @@ pub struct Game {
     bot_cars: Vec<BotCar>,
     game_timer: Timer,
     pub score: Arc<Mutex<u32>>,
+    game_state: GameState,
 }
 
 impl Game {
-    pub async fn new(receiver_key: Receiver<KeyCode>) -> Option<Game> {
-        let graphics_manager = GraphicsManager::new().await;
-        let player_car = match PlayerCar::new().await {
-            Some(pc) => Arc::new(Mutex::new(pc)),
-            None => return None, // Return early if PlayerCar creation fails.
-        };
+    pub async fn new(receiver_key: Receiver<KeyCode>) -> RustyResult<Game> {
+        let graphics_manager = GraphicsManager::new().await?;
+
+        let player_car = PlayerCar::new().await?;
 
         let score = Arc::new(Mutex::new(0));
-        let score_lock = score.lock();
 
-        let _unused = match score_lock {
-            Ok(init_score) => init_score,
-            Err(e) => {
-                println!("Error lock current score: {}", e);
-                return None;
-            }
-        };
-
-        graphics_manager.map(| graphics_manager | Game {
+        Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
             running: Arc::new(AtomicBool::new(true)),
             graphics_manager,
-            player_car,
+            player_car: Arc::new(Mutex::new(player_car)),
             bot_cars: Vec::new(),
             game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore { score: Arc::clone(&score) }))),
             score: Arc::clone(&score),
+            game_state: GameState::NotStarted,
         })
     }
 
@@ -65,18 +66,76 @@ impl Game {
     }
 
     pub fn start(&mut self) {
-        let receiver_input_clone = Arc::clone(&self.receiver_input);
-        let running_clone = Arc::clone(&self.running);
-        let player_car_clone = Arc::clone(&self.player_car);
-
+        let game_clone = self.clone();
         self.game_timer.start(500);
 
         thread::spawn(move || {
-            Game::move_player_car(receiver_input_clone, running_clone, player_car_clone);
+            game_clone.move_player_car();
         });
+
+        self.game_state = GameState::Running;
     }
 
-    pub fn move_player_car(receiver_input: Arc<Mutex<Receiver<KeyCode>>>, running: Arc<AtomicBool<>>, player_car: Arc<Mutex<PlayerCar>>) {
+    fn get_keyboard_input(&self) -> RustyResult<KeyCode> {
+        let player_input = self.receiver_input.lock();
+
+        if let Ok(receiver_input) = player_input {
+            match receiver_input.try_recv() {
+                Ok(key) => Ok(key),
+                Err(e) => {
+                    if e == std::sync::mpsc::TryRecvError::Empty {
+                        Ok(KeyCode::Unknown)
+                    } else {
+                        Err(RustyError::Recv(e))
+                    }
+                }
+            }
+        } else {
+            Err(RustyError::RustyLock)
+        }
+    }
+
+    pub async fn run(&mut self) -> RustyResult<()> {
+        let player_input = self.get_keyboard_input()?;
+
+        let delta_time = get_frame_time();
+
+        self.graphics_manager.background.update_position(delta_time);
+
+        match self.game_state {
+            GameState::NotStarted => {
+                if player_input == KeyCode::Enter {
+                    self.start();
+                } else {
+                    self.graphics_manager.draw_new_game();
+                }
+            }
+            GameState::Running => {
+                let player_car = self.player_car.lock();
+                let player_car = match player_car {
+                    Ok(player_car) => player_car,
+                    Err(_) => Err(RustyError::RustyLock)?,
+                };
+
+                self.graphics_manager.draw_player_car(player_car);
+
+                let current_score = self.score.lock();
+                let current_score = match current_score {
+                    Ok(current_score) => current_score,
+                    Err(_) => Err(RustyError::RustyLock)?,
+                };
+
+                self.graphics_manager.draw_score(*current_score);
+            }
+            GameState::GameOver => {
+                println!("Game over");
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn move_player_car(&self) {
         let mut player_input_and_car_reaction: HashMap<(usize, Way), Way> = HashMap::new();
 
         player_input_and_car_reaction.insert((KeyCode::Up as usize, Way::Center), Way::Upper);
@@ -85,26 +144,17 @@ impl Game {
         player_input_and_car_reaction.insert((KeyCode::Down as usize, Way::Center), Way::Lower);
 
 
-        while running.load(Ordering::Relaxed) {
-            let receiver_input_lock = receiver_input.lock();
-
-            let player_input = match receiver_input_lock {
-                Ok(receiver_input) => {
-                    match receiver_input.recv() {
-                        Ok(key) => key as usize,
-                        Err(e) => {
-                            println!("Error receiving key: {}", e);
-                            break;
-                        }
-                    }
-                }
+        while self.running.load(Ordering::Relaxed) {
+            let player_input = self.get_keyboard_input();
+            let player_input = match player_input {
+                Ok(player_input) => player_input as usize,
                 Err(e) => {
-                    println!("Error receiving key: {}", e);
+                    println!("Error getting player input: {}", e);
                     break;
                 }
             };
 
-            let player_car_lock = player_car.lock();
+            let player_car_lock = self.player_car.lock();
 
             let mut player_car = match player_car_lock {
                 Ok(player_car) => player_car,

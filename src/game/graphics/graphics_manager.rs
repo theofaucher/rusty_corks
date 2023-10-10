@@ -2,21 +2,23 @@ use std::sync::MutexGuard;
 
 use macroquad::prelude::{Color, draw_text, draw_texture, screen_height, screen_width, Texture2D, WHITE};
 use macroquad::shapes::draw_rectangle;
+use macroquad::text::measure_text;
 
 use crate::game::car::{PLAYER_CAR_HEIGHT, Way};
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::graphics::background::Background;
+use crate::utils::rusty_error::RustyResult;
 
+#[derive(Clone)]
 pub struct GraphicsManager {
     pub background: Background,
 }
 
 impl GraphicsManager {
-    pub async fn new() -> Option<GraphicsManager> {
-        let background = Background::new().await;
-
-        background.map(|background| GraphicsManager {
+    pub async fn new() -> RustyResult<GraphicsManager> {
+        let background = Background::new().await?;
+        Ok(GraphicsManager {
             background,
         })
     }
@@ -73,6 +75,26 @@ impl GraphicsManager {
                   (screen_height() / 2.0) + 100.0,
                   30.0,
                   WHITE);
+    }
 
+    pub fn draw_new_game(&self) {
+        draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.5, 0.5, 0.5, 0.5));
+
+        const RUSTY_CORKS_TEXT_SIZE: f32 = 60.0;
+        const ENTER_TEXT_SIZE: f32 = 30.0;
+
+        let text_size = measure_text("Rusty Corks", None, RUSTY_CORKS_TEXT_SIZE as u16, 1.0);
+        draw_text("Rusty Corks",
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) - (text_size.height / 2.0),
+                  RUSTY_CORKS_TEXT_SIZE,
+                  WHITE);
+
+        let text_size = measure_text("Press Enter to start", None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text("Press Enter to start",
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) - (text_size.height / 2.0) + 20.0,
+                  ENTER_TEXT_SIZE,
+                  WHITE);
     }
 }

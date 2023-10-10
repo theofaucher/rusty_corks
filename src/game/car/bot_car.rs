@@ -1,8 +1,10 @@
 use macroquad::prelude::{draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
+
 use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_HEIGHT, Way};
 use crate::game::car::player_car::PlayerCar;
+use crate::utils::rusty_error::RustyResult;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct BotCar {
     pub texture: Texture2D,
     pub way: Way,
@@ -11,20 +13,14 @@ pub struct BotCar {
 }
 
 impl BotCar {
-    pub async fn new(way: Way, speed: f32) -> Option<BotCar> {
-        let background_texture = load_texture("assets/blackCar.png").await;
-        match background_texture {
-            Ok(texture) => Some(BotCar {
-                texture,
-                way,
-                speed,
-                x_position: screen_width()
-            }),
-            Err(e) => {
-                println!("Error loading texture: {}", e);
-                None
-            }
-        }
+    pub async fn new(way: Way, speed: f32) -> RustyResult<BotCar> {
+        let car_texture = load_texture("assets/blackCar.png").await?;
+        Ok(BotCar {
+            texture: car_texture,
+            way,
+            speed,
+            x_position: screen_width(),
+        })
     }
 
     pub fn set_speed(&mut self, new_speed: f32) {
@@ -47,17 +43,17 @@ impl BotCar {
                 if player_car.way == Way::Upper {
                     ret = true;
                 }
-            },
+            }
             Way::Center => {
                 if player_car.way == Way::Center {
                     ret = true;
                 }
-            },
+            }
             Way::Lower => {
                 if player_car.way == Way::Lower {
                     ret = true;
                 }
-            },
+            }
         }
         ret
     }
@@ -67,14 +63,14 @@ impl Car for BotCar {
     fn draw(&self) {
         match self.way {
             Way::Upper => {
-                draw_texture(self.texture, self.x_position,screen_height() * (220.0/720.0) - PLAYER_CAR_HEIGHT/2.0  , WHITE);
-            },
+                draw_texture(self.texture, self.x_position, screen_height() * (220.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
+            }
             Way::Center => {
-                draw_texture(self.texture, self.x_position, screen_height()/2.0 - PLAYER_CAR_HEIGHT/2.0, WHITE);
-            },
+                draw_texture(self.texture, self.x_position, screen_height() / 2.0 - PLAYER_CAR_HEIGHT / 2.0, WHITE);
+            }
             Way::Lower => {
-                draw_texture(self.texture, self.x_position, screen_height() * (500.0/720.0) - PLAYER_CAR_HEIGHT/2.0, WHITE);
-            },
+                draw_texture(self.texture, self.x_position, screen_height() * (500.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
+            }
         }
     }
 }

@@ -1,24 +1,20 @@
-use macroquad::prelude::{draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
+use macroquad::prelude::{draw_texture, FileError, load_texture, screen_height, screen_width, Texture2D, WHITE};
+
 use crate::game::car::{Car, Direction, PLAYER_CAR_HEIGHT, Way};
 
+#[derive(Clone)]
 pub struct PlayerCar {
     pub texture: Texture2D,
     pub way: Way,
 }
 
 impl PlayerCar {
-    pub async fn new() -> Option<PlayerCar> {
-        let background_texture = load_texture("assets/playerCar.png").await;
-        match background_texture {
-            Ok(texture) => Some(PlayerCar {
-                texture,
-                way: Way::Center
-            }),
-            Err(e) => {
-                println!("Error loading texture: {}", e);
-                None
-            }
-        }
+    pub async fn new() -> Result<PlayerCar, FileError> {
+        let background_texture = load_texture("assets/playerCar.png").await?;
+        Ok(PlayerCar {
+            texture: background_texture,
+            way: Way::Center,
+        })
     }
 
     pub fn move_car(&mut self, dir: Direction) {
