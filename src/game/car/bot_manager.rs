@@ -2,8 +2,8 @@ use std::time::Instant;
 
 use rand::Rng;
 
-use crate::game::car::Way;
 use crate::game::car::bot_car::BotCar;
+use crate::game::car::Way;
 use crate::utils::rusty_error::RustyError::LaneNotFound;
 use crate::utils::rusty_error::RustyResult;
 
@@ -77,7 +77,7 @@ impl BotManager {
                 Some(i) => i,
                 None => return false,
             };
-            println!("Lane position: {}", lane_position);
+
             if lane_position == 0 {
                 ret = !self.is_lane_recently_used(&self.lanes[lane_position + 1])
             } else if lane_position == self.lanes.len() - 1 {

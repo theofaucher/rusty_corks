@@ -11,11 +11,11 @@ use crate::keyboard::key_game::KeyGame;
 
 const KEY_GAME: [KeyCode; 4] = [KeyCode::Down, KeyCode::Up, KeyCode::Enter, KeyCode::Escape];
 
-#[derive(Clone)]
 pub struct KeyboardObserver {
     sender: Arc<Mutex<Sender<KeyCode>>>,
     keys_games: Vec<KeyGame>,
     pub running: Arc<AtomicBool<>>,
+    thread: Option<JoinHandle<()>>,
 }
 
 impl KeyboardObserver {
@@ -29,21 +29,21 @@ impl KeyboardObserver {
             sender: Arc::new(Mutex::new(sender_key)),
             keys_games,
             running: Arc::new(AtomicBool::new(true)),
+            thread: None,
         }
     }
 
-    fn observer(&self) {
+    fn observer(keys_games: &[KeyGame], sender: &Arc<Mutex<Sender<KeyCode>>>) {
         let mut key_pressed: Option<KeyCode> = None;
-        for key_games in self.keys_games.iter() {
-            if key_games.is_key_pressed(){
+        for key_games in keys_games.iter() {
+            if key_games.is_key_pressed() {
                 key_pressed = Some(key_games.key);
                 break;
             }
-
         }
 
         if let Some(key) = key_pressed {
-            let send_status_lock = self.sender.lock();
+            let send_status_lock = sender.lock();
 
             match send_status_lock {
                 Ok(send_status) => {
@@ -51,7 +51,7 @@ impl KeyboardObserver {
                     if let Err(e) = send_status {
                         println!("Error sending key: {}", e);
                     }
-                },
+                }
                 Err(e) => {
                     println!("Error sending key: {}", e);
                 }
@@ -59,21 +59,23 @@ impl KeyboardObserver {
         }
     }
 
-    pub fn start_observer(&self) -> JoinHandle<()> {
-        let mut observer_clone = self.clone();
+    pub fn start_observer(&mut self) {
+        let sender_clone = Arc::clone(&self.sender);
+        let running_clone = Arc::clone(&self.running);
+        let mut keys_games_clone = self.keys_games.clone();
 
-        thread::spawn(move || {
+        self.thread = Some(thread::spawn(move || {
             let timer_duration = Duration::from_millis(20);
             let mut last_time = Instant::now();
 
 
-            while observer_clone.running.load(Ordering::Relaxed) {
-                for key_games in &mut observer_clone.keys_games {
-                    let is_down = is_key_down(key_games.key);
-                    key_games.update(is_down);
+            while running_clone.load(Ordering::Relaxed) {
+                for key_game in keys_games_clone.iter_mut() {
+                    let is_down = is_key_down(key_game.key);
+                    key_game.update(is_down);
                 }
 
-                observer_clone.observer();
+                KeyboardObserver::observer(&keys_games_clone, &sender_clone);
 
                 let elapsed_time = last_time.elapsed();
 
@@ -84,11 +86,15 @@ impl KeyboardObserver {
 
                 last_time = Instant::now();
             }
-            println!("Stop observer");
-        })
+        }));
     }
 
-    pub fn stop_observer(&self) {
+    pub fn stop_observer(&mut self) {
         self.running.store(false, Ordering::Relaxed);
+        if self.thread.is_some() {
+            if let Some(thread) = self.thread.take() {
+                let _ = thread.join();
+            }
+        }
     }
 }

@@ -87,7 +87,6 @@ impl Game {
         }
 
         let delta_time = get_frame_time();
-        self.graphics_manager.background.move_texture(delta_time);
 
         let entrance: bool = self.game_state != self.game_previous_state;
 
@@ -96,12 +95,14 @@ impl Game {
                 if player_input == KeyCode::Enter {
                     self.start()?;
                 } else {
+                    self.graphics_manager.background.move_texture(delta_time);
                     self.graphics_manager.draw_new_game();
                 }
             }
             GameState::Running => {
                 self.move_player_car(player_input)?;
 
+                self.graphics_manager.background.move_texture(delta_time);
                 self.graphics_manager.draw_player_car(&self.player_car);
 
                 {
@@ -130,10 +131,19 @@ impl Game {
                     message: format!("Impossible to lock the access to the current score: {}", e),
                 }))?;
 
+                self.graphics_manager.background.draw();
+
+                for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+                    self.graphics_manager.draw_bot_car(bot_car);
+                }
+
+                self.graphics_manager.draw_player_car(&self.player_car);
+
                 self.graphics_manager.draw_game_over(*current_score, self.session_record);
 
                 if player_input == KeyCode::Enter {
                     self.game_state = GameState::NotStarted;
+                    self.bot_manager.bot_car_list.clear();
                 }
             }
         }
@@ -208,19 +218,15 @@ async fn manage_bot_cars(&mut self, delta_time: f32) -> RustyResult<()> {
 
     for bot_car in self.bot_manager.bot_car_list.iter_mut() {
         bot_car.update_position(delta_time);
+
         if bot_car.is_colliding(&self.player_car) {
             self.game_state = GameState::GameOver;
-            self.bot_manager.bot_car_list.clear();
             break;
         }
     }
 
     self.bot_manager.bot_car_list.retain(|bot_car| {
-        if bot_car.is_out_of_screen() {
-            false // Ne pas conserver cet élément
-        } else {
-            true // Conserver cet élément
-        }
+        !bot_car.is_out_of_screen()
     });
     Ok(())
 }

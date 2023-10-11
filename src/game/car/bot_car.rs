@@ -1,7 +1,7 @@
-use macroquad::prelude::{draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
+use macroquad::prelude::{load_texture, screen_width, Texture2D};
 use rand::Rng;
 
-use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_HEIGHT, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
+use crate::game::car::{BOT_CAR_WIDTH, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
 use crate::game::car::player_car::PlayerCar;
 use crate::utils::rusty_error::RustyResult;
 
@@ -50,21 +50,5 @@ impl BotCar {
             ret = (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH));
         }
         ret
-    }
-}
-
-impl Car for BotCar {
-    fn draw(&self) {
-        match self.way {
-            Way::Upper => {
-                draw_texture(self.texture, self.x_position, screen_height() * (220.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
-            }
-            Way::Center => {
-                draw_texture(self.texture, self.x_position, screen_height() / 2.0 - PLAYER_CAR_HEIGHT / 2.0, WHITE);
-            }
-            Way::Lower => {
-                draw_texture(self.texture, self.x_position, screen_height() * (500.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
-            }
-        }
     }
 }

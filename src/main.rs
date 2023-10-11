@@ -18,9 +18,9 @@ async fn main() -> RustyResult<()> {
     let mut quit_game = false;
 
     let (sender, receiver) = mpsc::channel::<KeyCode>();
-    let observer = KeyboardObserver::new(sender);
-    observer.start_observer();
+    let mut observer = KeyboardObserver::new(sender);
 
+    observer.start_observer();
     let mut game = Game::new(receiver).await?;
 
     while !quit_game {
@@ -28,6 +28,7 @@ async fn main() -> RustyResult<()> {
         next_frame().await;
     }
 
+    observer.stop_observer();
     Ok(())
 }
 
