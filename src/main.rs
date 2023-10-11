@@ -12,16 +12,20 @@ mod utils;
 
 #[macroquad::main(window_conf())]
 async fn main() -> RustyResult<()> {
+    let mut quit_game = false;
+
     let (sender, receiver) = mpsc::channel::<KeyCode>();
     let observer = KeyboardObserver::new(sender);
     observer.start_observer();
 
     let mut game = Game::new(receiver).await?;
 
-    loop {
-        game.run().await?;
+    while !quit_game {
+        quit_game = game.run().await?;
         next_frame().await;
     }
+
+    Ok(())
 }
 
 pub fn window_conf() -> Conf {

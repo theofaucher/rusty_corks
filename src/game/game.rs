@@ -72,11 +72,17 @@ impl Game {
         Ok(())
     }
 
-    pub async fn run(&mut self) -> RustyResult<()> {
+    pub async fn run(&mut self) -> RustyResult<bool> {
         let player_input = self.get_keyboard_input()?;
 
-        let delta_time = get_frame_time();
+        if player_input == KeyCode::Escape {
+            if self.game_state == GameState::Running {
+                self.stop()?;
+            }
+            return Ok(true);
+        }
 
+        let delta_time = get_frame_time();
         self.graphics_manager.background.move_texture(delta_time);
 
         let entrance: bool = self.game_state != self.game_previous_state;
@@ -120,7 +126,7 @@ impl Game {
             }
         }
 
-        Ok(())
+        Ok(false)
     }
 
     fn stop(&mut self) -> RustyResult<()> {
