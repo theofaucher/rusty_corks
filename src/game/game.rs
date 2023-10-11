@@ -31,7 +31,7 @@ pub struct Game {
     receiver_input: Arc<Mutex<Receiver<KeyCode>>>,
     running: Arc<AtomicBool<>>,
     graphics_manager: GraphicsManager,
-    pub player_car: Arc<Mutex<PlayerCar>>,
+    pub player_car: PlayerCar,
     bot_cars: Vec<BotCar>,
     game_timer: Timer,
     pub score: Arc<Mutex<u32>>,
@@ -52,7 +52,7 @@ impl Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
             running: Arc::new(AtomicBool::new(true)),
             graphics_manager,
-            player_car: Arc::new(Mutex::new(player_car)),
+            player_car,
             bot_cars: Vec::new(),
             game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore { score: Arc::clone(&score) }))),
             score: Arc::clone(&score),
@@ -99,15 +99,7 @@ impl Game {
             GameState::Running => {
                 self.move_player_car(player_input)?;
 
-                let player_car = self.player_car.lock();
-                let player_car = match player_car {
-                    Ok(player_car) => player_car,
-                    Err(_) => Err(RustyLock(LockError {
-                        message: "Impossible to lock the access to the player input".to_string(),
-                    }))?,
-                };
-
-                self.graphics_manager.draw_player_car(player_car);
+                self.graphics_manager.draw_player_car(&self.player_car);
 
                 let current_score = self.score.lock();
                 let current_score = match current_score {
@@ -164,17 +156,9 @@ impl Game {
         Ok(())
     }
 
-    fn move_player_car(&self, player_input: KeyCode) -> RustyResult<()> {
-        let player_car = self.player_car.lock();
-        let mut player_car = match player_car {
-            Ok(player_car) => player_car,
-            Err(_) => Err(RustyLock(LockError {
-                message: "Impossible to lock the access to the player car".to_string(),
-            }))?,
-        };
-
-        if let Some(new_way) = Game::get_destination_way(player_input as usize, player_car.way) {
-            player_car.way = new_way;
+    fn move_player_car(&mut self, player_input: KeyCode) -> RustyResult<()> {
+        if let Some(new_way) = Game::get_destination_way(player_input as usize, self.player_car.way) {
+            self.player_car.way = new_way;
         }
 
         Ok(())

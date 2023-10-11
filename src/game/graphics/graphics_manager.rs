@@ -1,5 +1,3 @@
-use std::sync::MutexGuard;
-
 use macroquad::prelude::{Color, draw_text, draw_texture, screen_height, screen_width, Texture2D, WHITE};
 use macroquad::shapes::draw_rectangle;
 use macroquad::text::measure_text;
@@ -41,7 +39,7 @@ impl GraphicsManager {
         self.draw_car(bot_car.texture, &bot_car.way, bot_car.x_position);
     }
 
-    pub fn draw_player_car(&self, player_car: MutexGuard<PlayerCar>) {
+    pub fn draw_player_car(&self, player_car: &PlayerCar) {
         self.draw_car(player_car.texture, &player_car.way, screen_width() / 4.0);
     }
 
