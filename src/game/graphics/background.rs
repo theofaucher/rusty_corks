@@ -17,7 +17,7 @@ impl Background {
         })
     }
 
-    pub fn update_position(&mut self, delta_time: f32) {
+    pub fn move_texture(&mut self, delta_time: f32) {
         // Mettez à jour la position du fond
         self.position.x -= self.speed * delta_time;
         // Créez un effet de boucle continue
