@@ -1,6 +1,6 @@
 use std::error;
 use std::fmt;
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::sync::mpsc::TryRecvError;
 
 use macroquad::prelude::FileError;
@@ -8,17 +8,22 @@ use macroquad::prelude::FileError;
 pub type RustyResult<T> = Result<T, RustyError>;
 
 #[derive(Debug)]
+pub struct LockError {
+    pub message: String,
+}
+
+#[derive(Debug)]
 pub enum RustyError {
-    RustyLock,
+    RustyLock(LockError),
     File(FileError),
     Recv(TryRecvError),
 }
 
-impl fmt::Display for RustyError {
+impl Display for RustyError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            RustyError::RustyLock =>
-                write!(f, "Rusty lock error"),
+            RustyError::RustyLock(e) =>
+                write!(f, "Rusty lock error: {}", e.message),
             _ => Ok(()),
         }
     }
@@ -27,7 +32,7 @@ impl fmt::Display for RustyError {
 impl error::Error for RustyError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
-            RustyError::RustyLock => None,
+            RustyError::RustyLock(_) => None,
             RustyError::File(ref e) => Some(e),
             RustyError::Recv(ref e) => Some(e),
         }
