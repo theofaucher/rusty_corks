@@ -1,10 +1,12 @@
 use macroquad::prelude::{draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
+use rand::Rng;
 
-use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_HEIGHT, Way};
+use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_HEIGHT, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
 use crate::game::car::player_car::PlayerCar;
 use crate::utils::rusty_error::RustyResult;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Copy)]
+#[derive(Clone)]
 pub struct BotCar {
     pub texture: Texture2D,
     pub way: Way,
@@ -14,7 +16,13 @@ pub struct BotCar {
 
 impl BotCar {
     pub async fn new(way: Way, speed: f32) -> RustyResult<BotCar> {
-        let car_texture = load_texture("assets/blackCar.png").await?;
+        let mut rng = rand::thread_rng();
+        let path = match rng.gen_range(0..2) {
+            0 => "assets/blackCar.png",
+            1 => "assets/redCar.png",
+            _ => "assets/redCar.png",
+        };
+        let car_texture = load_texture(path).await?;
         Ok(BotCar {
             texture: car_texture,
             way,
@@ -37,23 +45,9 @@ impl BotCar {
         self.x_position < -screen_width() - BOT_CAR_WIDTH
     }
     pub fn is_colliding(&self, player_car: &PlayerCar) -> bool {
-        let mut ret: bool = false;
-        match self.way {
-            Way::Upper => {
-                if player_car.way == Way::Upper {
-                    ret = true;
-                }
-            }
-            Way::Center => {
-                if player_car.way == Way::Center {
-                    ret = true;
-                }
-            }
-            Way::Lower => {
-                if player_car.way == Way::Lower {
-                    ret = true;
-                }
-            }
+        let mut ret = false;
+        if player_car.way == self.way {
+            ret = (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH));
         }
         ret
     }
