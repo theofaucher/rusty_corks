@@ -4,7 +4,7 @@ use std::sync::mpsc::Receiver;
 use macroquad::input::KeyCode;
 use macroquad::prelude::get_frame_time;
 
-use crate::game::car::bot_car::BotCar;
+use crate::game::car::bot_manager::BotManager;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::car::Way;
 use crate::game::graphics::graphics_manager::GraphicsManager;
@@ -30,10 +30,11 @@ pub struct Game {
     receiver_input: Arc<Mutex<Receiver<KeyCode>>>,
     graphics_manager: GraphicsManager,
     pub player_car: PlayerCar,
-    bot_cars: Vec<BotCar>,
+    bot_manager: BotManager,
     game_timer: Timer,
-    pub score: Arc<Mutex<u32>>,
+    score: Arc<Mutex<u32>>,
     session_record: u32,
+    speed: f32,
     game_state: GameState,
     game_previous_state: GameState,
 }
@@ -46,14 +47,17 @@ impl Game {
 
         let score = Arc::new(Mutex::new(0));
 
+        let speed = 500.0;
+
         Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
             graphics_manager,
             player_car,
-            bot_cars: Vec::new(),
+            bot_manager: BotManager::new(speed),
             game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore { score: Arc::clone(&score) }))),
             score: Arc::clone(&score),
             session_record: 0,
+            speed,
             game_state: GameState::NotStarted,
             game_previous_state: GameState::NotStarted,
         })
@@ -99,6 +103,14 @@ impl Game {
                 }))?;
 
                 self.graphics_manager.draw_score(*current_score);
+            }
+
+            self.manage_bot_cars(delta_time).await ?;
+
+            for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+                self.graphics_manager.draw_bot_car(bot_car);
+            }
+
                 if player_input == KeyCode::Enter {
                     self.game_state = GameState::GameOver;
                 }
@@ -184,4 +196,26 @@ impl Game {
         }
         destination_way
     }
+
+async fn manage_bot_cars(&mut self, delta_time: f32) -> RustyResult<()> {
+    self.bot_manager.spawn_car().await?;
+
+    for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+        bot_car.update_position(delta_time);
+        if bot_car.is_colliding(&self.player_car) {
+            self.game_state = GameState::GameOver;
+            self.bot_manager.bot_car_list.clear();
+            break;
+        }
+    }
+
+    self.bot_manager.bot_car_list.retain(|bot_car| {
+        if bot_car.is_out_of_screen() {
+            false // Ne pas conserver cet élément
+        } else {
+            true // Conserver cet élément
+        }
+    });
+    Ok(())
+}
 }

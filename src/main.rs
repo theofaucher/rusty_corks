@@ -10,6 +10,9 @@ mod game;
 mod keyboard;
 mod utils;
 
+pub const WINDOW_WIDTH: i32 = 1280;
+pub const WINDOW_HEIGHT: i32 = 720;
+
 #[macroquad::main(window_conf())]
 async fn main() -> RustyResult<()> {
     let (sender, receiver) = mpsc::channel::<KeyCode>();
@@ -27,8 +30,8 @@ async fn main() -> RustyResult<()> {
 pub fn window_conf() -> Conf {
     Conf {
         window_title: "Rusty Corks".to_string(),
-        window_width: 1280,
-        window_height: 720,
+        window_width: WINDOW_WIDTH,
+        window_height: WINDOW_HEIGHT,
         window_resizable: false,
         ..Default::default()
     }

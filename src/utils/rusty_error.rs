@@ -17,6 +17,7 @@ pub enum RustyError {
     RustyLock(LockError),
     File(FileError),
     Recv(TryRecvError),
+    LaneNotFound,
 }
 
 impl Display for RustyError {
@@ -24,6 +25,8 @@ impl Display for RustyError {
         match self {
             RustyError::RustyLock(e) =>
                 write!(f, "Rusty lock error: {}", e.message),
+            RustyError::LaneNotFound =>
+                write!(f, "Lane not found"),
             _ => Ok(()),
         }
     }
@@ -35,6 +38,7 @@ impl error::Error for RustyError {
             RustyError::RustyLock(_) => None,
             RustyError::File(ref e) => Some(e),
             RustyError::Recv(ref e) => Some(e),
+            RustyError::LaneNotFound => None,
         }
     }
 }

@@ -1,6 +1,6 @@
-use macroquad::prelude::{draw_texture, FileError, load_texture, screen_height, screen_width, Texture2D, WHITE};
+use macroquad::prelude::{draw_texture, FileError, load_texture, screen_height, Texture2D, WHITE};
 
-use crate::game::car::{Car, Direction, PLAYER_CAR_HEIGHT, Way};
+use crate::game::car::{Car, Direction, PLAYER_CAR_HEIGHT, PLAYER_CAR_X_POSITION, Way};
 
 #[derive(Clone)]
 pub struct PlayerCar {
@@ -43,13 +43,13 @@ impl Car for PlayerCar {
     fn draw(&self) {
         match self.way {
             Way::Upper => {
-                draw_texture(self.texture, screen_width()/4.0,screen_height() * (220.0/720.0) - PLAYER_CAR_HEIGHT/2.0  , WHITE);
+                draw_texture(self.texture, PLAYER_CAR_X_POSITION, screen_height() * (220.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
             },
             Way::Center => {
-                draw_texture(self.texture, screen_width()/4.0, screen_height()/2.0 - PLAYER_CAR_HEIGHT/2.0, WHITE);
+                draw_texture(self.texture, PLAYER_CAR_X_POSITION, screen_height() / 2.0 - PLAYER_CAR_HEIGHT / 2.0, WHITE);
             },
             Way::Lower => {
-                draw_texture(self.texture, screen_width()/4.0, screen_height() * (500.0/720.0) - PLAYER_CAR_HEIGHT/2.0, WHITE);
+                draw_texture(self.texture, PLAYER_CAR_X_POSITION, screen_height() * (500.0 / 720.0) - PLAYER_CAR_HEIGHT / 2.0, WHITE);
             },
         }
     }
