@@ -88,7 +88,6 @@ impl KeyboardObserver {
         })
     }
 
-    #[warn(dead_code)]
     pub fn stop_observer(&self) {
         self.running.store(false, Ordering::Relaxed);
     }

@@ -1,5 +1,4 @@
 use std::sync::{Arc, Mutex};
-use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::Receiver;
 
 use macroquad::input::KeyCode;
@@ -29,7 +28,6 @@ enum GameState {
 
 pub struct Game {
     receiver_input: Arc<Mutex<Receiver<KeyCode>>>,
-    running: Arc<AtomicBool<>>,
     graphics_manager: GraphicsManager,
     pub player_car: PlayerCar,
     bot_cars: Vec<BotCar>,
@@ -50,7 +48,6 @@ impl Game {
 
         Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
-            running: Arc::new(AtomicBool::new(true)),
             graphics_manager,
             player_car,
             bot_cars: Vec::new(),
@@ -63,13 +60,9 @@ impl Game {
     }
 
     pub fn start(&mut self) -> RustyResult<()> {
-        let current_score = self.score.lock();
-        let mut current_score = match current_score {
-            Ok(current_score) => current_score,
-            Err(_) => Err(RustyLock(LockError {
-                message: "Impossible to lock the access to the current score".to_string(),
-            }))?,
-        };
+        let mut current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+            message: format!("Impossible to lock the access to the current score: {}", e),
+        }))?;
 
         *current_score = 0;
 
@@ -101,13 +94,9 @@ impl Game {
 
                 self.graphics_manager.draw_player_car(&self.player_car);
 
-                let current_score = self.score.lock();
-                let current_score = match current_score {
-                    Ok(current_score) => current_score,
-                    Err(_) => Err(RustyLock(LockError {
-                        message: "Impossible to lock the access to the current score".to_string(),
-                    }))?,
-                };
+                let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+                    message: format!("Impossible to lock the access to the current score: {}", e),
+                }))?;
 
                 self.graphics_manager.draw_score(*current_score);
                 if player_input == KeyCode::Enter {
@@ -119,13 +108,9 @@ impl Game {
                     self.stop()?;
                 }
 
-                let current_score = self.score.lock();
-                let current_score = match current_score {
-                    Ok(current_score) => current_score,
-                    Err(_) => Err(RustyLock(LockError {
-                        message: "Impossible to lock the access to the current score".to_string(),
-                    }))?,
-                };
+                let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+                    message: format!("Impossible to lock the access to the current score: {}", e),
+                }))?;
 
                 self.graphics_manager.draw_game_over(*current_score, self.session_record);
 
@@ -141,13 +126,9 @@ impl Game {
     fn stop(&mut self) -> RustyResult<()> {
         self.game_timer.stop();
 
-        let current_score = self.score.lock();
-        let current_score = match current_score {
-            Ok(current_score) => current_score,
-            Err(_) => Err(RustyLock(LockError {
-                message: "Impossible to lock the access to the current score".to_string(),
-            }))?,
-        };
+        let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+            message: format!("Impossible to lock the access to the current score: {}", e),
+        }))?;
 
         if self.session_record < *current_score {
             self.session_record = *current_score;
@@ -165,23 +146,19 @@ impl Game {
     }
 
     fn get_keyboard_input(&self) -> RustyResult<KeyCode> {
-        let player_input = self.receiver_input.lock();
+        let receiver_input = self.receiver_input.lock().map_err(|e| RustyLock(LockError {
+            message: format!("Impossible to lock the access to the player car: {}", e),
+        }))?;
 
-        if let Ok(receiver_input) = player_input {
-            match receiver_input.try_recv() {
-                Ok(key) => Ok(key),
-                Err(e) => {
-                    if e == std::sync::mpsc::TryRecvError::Empty {
-                        Ok(KeyCode::Unknown)
-                    } else {
-                        Err(RustyError::Recv(e))
-                    }
+        match receiver_input.try_recv() {
+            Ok(key) => Ok(key),
+            Err(e) => {
+                if e == std::sync::mpsc::TryRecvError::Empty {
+                    Ok(KeyCode::Unknown)
+                } else {
+                    Err(RustyError::Recv(e))
                 }
             }
-        } else {
-            Err(RustyLock(LockError {
-                message: "Impossible to lock the access to the player car".to_string(),
-            }))?
         }
     }
 
