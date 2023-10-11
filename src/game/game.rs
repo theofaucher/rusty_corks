@@ -104,18 +104,18 @@ impl Game {
 
                 self.graphics_manager.draw_player_car(&self.player_car);
 
-                let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
-                    message: format!("Impossible to lock the access to the current score: {}", e),
-                }))?;
+                {
+                    let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+                        message: format!("Impossible to lock the access to the current score: {}", e),
+                    }))?;
+                    self.graphics_manager.draw_score(*current_score);
+                }
 
-                self.graphics_manager.draw_score(*current_score);
-            }
+                self.manage_bot_cars(delta_time).await?;
 
-            self.manage_bot_cars(delta_time).await ?;
-
-            for bot_car in self.bot_manager.bot_car_list.iter_mut() {
-                self.graphics_manager.draw_bot_car(bot_car);
-            }
+                for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+                    self.graphics_manager.draw_bot_car(bot_car);
+                }
 
                 if player_input == KeyCode::Enter {
                     self.game_state = GameState::GameOver;

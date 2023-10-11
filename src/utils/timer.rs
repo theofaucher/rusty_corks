@@ -29,7 +29,7 @@ impl Timer {
     }
 
     fn run(running: Arc<AtomicBool>, timer_data: Arc<Mutex<TimerData>>, delay: u16, callback: TimerCallback) {
-        let timer_duration = Duration::from_millis(delay as u64);
+        let mut timer_duration = Duration::from_millis(delay as u64);
 
         let mut last_time: Instant = Instant::now();
 
@@ -37,6 +37,7 @@ impl Timer {
             let elapsed_time = last_time.elapsed();
 
             if elapsed_time > timer_duration {
+                let execution_time: Instant = Instant::now();
                 let timer_data = timer_data.lock();
 
                 match timer_data {
@@ -47,6 +48,9 @@ impl Timer {
                         println!("Error lock timer_data: {}", e);
                     }
                 }
+                let execution_time = execution_time.elapsed();
+                timer_duration = Duration::from_millis(delay as u64) - execution_time;
+
                 last_time = Instant::now();
             }
             sleep(Duration::from_millis(1));
