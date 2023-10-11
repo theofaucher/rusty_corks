@@ -1,6 +1,6 @@
 use macroquad::prelude::{FileError, load_texture, Texture2D};
 
-use crate::game::car::{Car, Way};
+use crate::game::car::Way;
 
 #[derive(Clone)]
 pub struct PlayerCar {
