@@ -17,9 +17,13 @@ pub struct BotCar {
 impl BotCar {
     pub async fn new(way: Way) -> RustyResult<BotCar> {
         let mut rng = rand::thread_rng();
-        let path = match rng.gen_range(0..2) {
+        let path = match rng.gen_range(0..6) {
             0 => "assets/blackCar.png",
             1 => "assets/redCar.png",
+            2 => "assets/policeCar.png",
+            3 => "assets/whiteCar.png",
+            4 => "assets/yellowCar.png",
+            5 => "assets/blueCar.png",
             _ => "assets/redCar.png",
         };
         let car_texture = load_texture(path).await?;
