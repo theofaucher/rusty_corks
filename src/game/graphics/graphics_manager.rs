@@ -29,16 +29,16 @@ impl GraphicsManager {
             collision,
         })
     }
-    fn draw_depending_way(&self, texture: Texture2D, way: &Way, x: f32, height_soustraction: f32) {
+    fn draw_depending_way(&self, texture: Texture2D, way: &Way, x: f32, height_subtraction: f32) {
         match way {
             Way::Upper => {
-                draw_texture(texture, x, screen_height() * (220.0 / 720.0) - height_soustraction / 2.0, WHITE);
+                draw_texture(texture, x, screen_height() * (220.0 / 720.0) - height_subtraction / 2.0, WHITE);
             }
             Way::Center => {
-                draw_texture(texture, x, screen_height() / 2.0 - height_soustraction / 2.0, WHITE);
+                draw_texture(texture, x, screen_height() / 2.0 - height_subtraction / 2.0, WHITE);
             }
             Way::Lower => {
-                draw_texture(texture, x, screen_height() * (500.0 / 720.0) - height_soustraction / 2.0, WHITE);
+                draw_texture(texture, x, screen_height() * (500.0 / 720.0) - height_subtraction / 2.0, WHITE);
             }
         }
     }
@@ -69,10 +69,18 @@ impl GraphicsManager {
                   60.0,
                   WHITE);
 
-        let score_text = format!("Score: {} Session record: {}", score, session_record);
+        let score_text = format!("Score: {}", score);
+        let mut text_size = measure_text(&score_text, None, ENTER_TEXT_SIZE as u16, 1.0);
         draw_text(&score_text,
-                  (screen_width() / 2.0) - 200.0,
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
                   (screen_height() / 2.0) - 10.0,
+                  35.0,
+                  WHITE);
+        let score_record_text = format!("Session record: {}", session_record);
+        text_size = measure_text(&score_record_text, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(&score_record_text,
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) + 30.0,
                   35.0,
                   WHITE);
 
