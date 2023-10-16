@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use macroquad::prelude::{load_texture, screen_width, Texture2D};
 use rand::Rng;
 
@@ -5,6 +7,8 @@ use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITI
 use crate::game::car::player_car::PlayerCar;
 use crate::game::game::START_GAME_SPEED;
 use crate::utils::rusty_error::RustyResult;
+
+const BOT_CAR_PATH: &str = "assets/cars/bots/";
 
 #[derive(Clone)]
 pub struct BotCar {
@@ -16,19 +20,32 @@ pub struct BotCar {
 
 impl BotCar {
     pub async fn new(way: Way) -> RustyResult<BotCar> {
+        let mut png_path = Vec::new();
+        let directory = Path::new(BOT_CAR_PATH);
+
+        if directory.is_dir() {
+            for entry in (std::fs::read_dir(directory)?).flatten() {
+                let file = entry.path();
+                if file.is_file() && let Some(extension) = file.extension() && extension.to_string_lossy().to_lowercase() == "png" {
+                    png_path.push(file.as_path().to_string_lossy().to_string());
+                }
+            }
+        }
+
         let mut rng = rand::thread_rng();
-        let path = match rng.gen_range(0..2) {
-            0 => "assets/blackCar.png",
-            1 => "assets/redCar.png",
-            _ => "assets/redCar.png",
-        };
-        let car_texture = load_texture(path).await?;
-        Ok(BotCar {
-            texture: car_texture,
-            way,
-            speed: START_GAME_SPEED,
-            x_position: screen_width(),
-        })
+        let texture_rng = png_path.get(rng.gen_range(0..png_path.len()));
+
+        if let Some(texture_rng) = texture_rng {
+            let car_texture = load_texture(texture_rng).await?;
+            Ok(BotCar {
+                texture: car_texture,
+                way,
+                speed: START_GAME_SPEED,
+                x_position: screen_width(),
+            })
+        } else {
+            unreachable!();
+        }
     }
 
     pub fn update_position(&mut self, delta_time: f32) -> RustyResult<()>

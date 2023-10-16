@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use std::sync::mpsc;
 
 use macroquad::prelude::*;
@@ -12,7 +14,6 @@ mod utils;
 
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
-
 pub const GAME_NAME: &str = "Rusty Corks";
 
 #[macroquad::main(window_conf())]

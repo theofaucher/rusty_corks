@@ -13,10 +13,16 @@ pub struct LockError {
 }
 
 #[derive(Debug)]
+pub struct ReadDirectoryError {
+    pub message: String,
+}
+
+#[derive(Debug)]
 pub enum RustyError {
     RustyLock(LockError),
     File(FileError),
     Recv(TryRecvError),
+    ReadDirectory(std::io::Error),
     LaneNotFound,
 }
 
@@ -27,6 +33,8 @@ impl Display for RustyError {
                 write!(f, "Rusty lock error: {}", e.message),
             RustyError::LaneNotFound =>
                 write!(f, "Lane not found"),
+            // RustyError::ReadDirectory(e) =>
+            //     write!(f, "Read directory error: {}", e.message),
             _ => Ok(()),
         }
     }
@@ -38,6 +46,7 @@ impl error::Error for RustyError {
             RustyError::RustyLock(_) => None,
             RustyError::File(ref e) => Some(e),
             RustyError::Recv(ref e) => Some(e),
+            RustyError::ReadDirectory(ref e) => Some(e),
             RustyError::LaneNotFound => None,
         }
     }
@@ -52,5 +61,11 @@ impl From<FileError> for RustyError {
 impl From<TryRecvError> for RustyError {
     fn from(err: TryRecvError) -> RustyError {
         RustyError::Recv(err)
+    }
+}
+
+impl From<std::io::Error> for RustyError {
+    fn from(err: std::io::Error) -> RustyError {
+        RustyError::ReadDirectory(err)
     }
 }
