@@ -4,9 +4,9 @@ use std::sync::mpsc::Receiver;
 use macroquad::input::KeyCode;
 use macroquad::prelude::get_frame_time;
 
+use crate::game::car::{Car, Way};
 use crate::game::car::bot_manager::BotManager;
 use crate::game::car::player_car::PlayerCar;
-use crate::game::car::Way;
 use crate::game::graphics::graphics_manager::GraphicsManager;
 use crate::utils::rusty_error::{LockError, RustyError, RustyResult};
 use crate::utils::rusty_error::RustyError::RustyLock;
@@ -166,8 +166,8 @@ impl Game {
     }
 
     fn move_player_car(&mut self, player_input: KeyCode) -> RustyResult<()> {
-        if let Some(new_way) = Game::get_destination_way(player_input as usize, self.player_car.way) {
-            self.player_car.way = new_way;
+        if let Some(new_way) = Game::get_destination_way(player_input as usize, self.player_car.get_way()) {
+            self.player_car.set_way(new_way);
         }
 
         Ok(())

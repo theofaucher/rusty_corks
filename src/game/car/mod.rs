@@ -24,3 +24,8 @@ pub enum Way {
     Center,
     Lower,
 }
+
+pub trait Car {
+    fn get_texture(&self) -> Texture2D;
+    fn get_way(&self) -> Way;
+}

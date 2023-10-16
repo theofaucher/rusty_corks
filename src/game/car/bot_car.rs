@@ -1,15 +1,15 @@
 use macroquad::prelude::{load_texture, screen_width, Texture2D};
 use rand::Rng;
 
-use crate::game::car::{BOT_CAR_WIDTH, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
+use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
 use crate::game::car::player_car::PlayerCar;
 use crate::utils::rusty_error::RustyResult;
 
 #[derive(PartialEq, Copy)]
 #[derive(Clone)]
 pub struct BotCar {
-    pub texture: Texture2D,
-    pub way: Way,
+    texture: Texture2D,
+    way: Way,
     pub x_position: f32,
     speed: f32,
 }
@@ -46,9 +46,19 @@ impl BotCar {
     }
     pub fn is_colliding(&self, player_car: &PlayerCar) -> bool {
         let mut ret = false;
-        if player_car.way == self.way {
+        if player_car.get_way() == self.way {
             ret = (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH));
         }
         ret
+    }
+}
+
+impl Car for BotCar {
+    fn get_texture(&self) -> Texture2D {
+        self.texture
+    }
+
+    fn get_way(&self) -> Way {
+        self.way
     }
 }

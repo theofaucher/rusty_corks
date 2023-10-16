@@ -2,7 +2,7 @@ use macroquad::prelude::{Color, draw_text, draw_texture, screen_height, screen_w
 use macroquad::shapes::draw_rectangle;
 use macroquad::text::measure_text;
 
-use crate::game::car::{PLAYER_CAR_HEIGHT, Way};
+use crate::game::car::{Car, PLAYER_CAR_HEIGHT, Way};
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::graphics::background::Background;
@@ -36,11 +36,11 @@ impl GraphicsManager {
     }
 
     pub fn draw_bot_car(&self, bot_car: &BotCar) {
-        self.draw_car(bot_car.texture, &bot_car.way, bot_car.x_position);
+        self.draw_car(bot_car.get_texture(), &bot_car.get_way(), bot_car.x_position);
     }
 
     pub fn draw_player_car(&self, player_car: &PlayerCar) {
-        self.draw_car(player_car.texture, &player_car.way, screen_width() / 4.0);
+        self.draw_car(player_car.get_texture(), &player_car.get_way(), screen_width() / 4.0);
     }
 
     pub fn draw_score(&self, score: u32) {
