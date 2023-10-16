@@ -41,9 +41,21 @@ impl BotCar {
         self.x_position < -screen_width() - BOT_CAR_WIDTH
     }
     pub fn is_colliding(&self, player_car: &PlayerCar) -> Option<(Way, f32)> {
-        let ret = None;
-        if player_car.get_way() == self.way && (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH)) {
-            return Some((self.way, self.x_position));
+        let mut ret = None;
+        if player_car.get_way() == self.way {
+            let bot_car_back_x = self.x_position;
+            let bot_car_front_x = self.x_position + PLAYER_CAR_WIDTH;
+            let player_car_back_x = PLAYER_CAR_X_POSITION;
+            let player_car_front_x = PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH;
+
+            // Vérifier s'il y a une intersection en X
+            if !(bot_car_front_x <= player_car_back_x || player_car_front_x <= bot_car_back_x) {
+                // Calculer la position de l'intersection en X
+                let overlap_back = bot_car_back_x.max(player_car_back_x);
+                let overlap_front = bot_car_front_x.min(player_car_front_x);
+
+                ret = Some((self.way, overlap_back + (overlap_front - overlap_back) / 2.0))
+            }
         }
         ret
     }
