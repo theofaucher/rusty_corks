@@ -107,7 +107,6 @@ impl Game {
                         message: format!("Impossible to lock the access to the current score: {}", e),
                     }))?;
                     self.score += (0.005 * *current_speed) as u32;
-                    self.graphics_manager.draw_score(self.score);
 
                     self.graphics_manager.background.set_speed(*current_speed);
                     self.graphics_manager.background.move_texture(delta_time);
@@ -118,6 +117,7 @@ impl Game {
                 }
 
                 self.graphics_manager.draw_player_car(&self.player_car);
+                self.graphics_manager.draw_score(self.score);
 
                 let car_colliding = self.manage_bot_cars(delta_time).await?;
                 if let Some((way, x_position)) = car_colliding {
