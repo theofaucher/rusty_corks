@@ -13,6 +13,8 @@ mod utils;
 pub const WINDOW_WIDTH: i32 = 1280;
 pub const WINDOW_HEIGHT: i32 = 720;
 
+pub const GAME_NAME: &str = "Rusty Corks";
+
 #[macroquad::main(window_conf())]
 async fn main() -> RustyResult<()> {
     let mut quit_game = false;
@@ -34,7 +36,7 @@ async fn main() -> RustyResult<()> {
 
 pub fn window_conf() -> Conf {
     Conf {
-        window_title: "Rusty Corks".to_string(),
+        window_title: GAME_NAME.to_string(),
         window_width: WINDOW_WIDTH,
         window_height: WINDOW_HEIGHT,
         window_resizable: false,
