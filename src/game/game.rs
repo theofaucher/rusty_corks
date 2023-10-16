@@ -102,9 +102,6 @@ impl Game {
             GameState::Running => {
                 self.move_player_car(player_input)?;
 
-                self.graphics_manager.background.move_texture(delta_time);
-                self.graphics_manager.draw_player_car(&self.player_car);
-
                 {
                     let current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
                         message: format!("Impossible to lock the access to the current score: {}", e),
@@ -113,11 +110,14 @@ impl Game {
                     self.graphics_manager.draw_score(self.score);
 
                     self.graphics_manager.background.set_speed(*current_speed);
+                    self.graphics_manager.background.move_texture(delta_time);
                     for bot_car in self.bot_manager.bot_car_list.iter_mut() {
                         self.graphics_manager.draw_bot_car(bot_car);
                         bot_car.set_speed(*current_speed);
                     }
                 }
+
+                self.graphics_manager.draw_player_car(&self.player_car);
 
                 let car_colliding = self.manage_bot_cars(delta_time).await?;
                 if let Some((way, x_position)) = car_colliding {
@@ -229,7 +229,7 @@ impl Game {
         let mut is_colliding: Option<(Way, f32)> = None;
 
         for bot_car in self.bot_manager.bot_car_list.iter_mut() {
-            bot_car.update_position(delta_time)?;
+            bot_car.update_position(delta_time);
             is_colliding = bot_car.is_colliding(&self.player_car);
             if is_colliding.is_some() {
                 break;

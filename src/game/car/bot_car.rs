@@ -8,7 +8,7 @@ use crate::game::car::player_car::PlayerCar;
 use crate::game::game::START_GAME_SPEED;
 use crate::utils::rusty_error::RustyResult;
 
-const BOT_CAR_PATH: &str = "assets/cars/bots/";
+const BOT_CAR_TEXTURE_PATH: &str = "assets/cars/bots/";
 
 #[derive(Clone)]
 pub struct BotCar {
@@ -21,7 +21,7 @@ pub struct BotCar {
 impl BotCar {
     pub async fn new(way: Way) -> RustyResult<BotCar> {
         let mut png_path = Vec::new();
-        let directory = Path::new(BOT_CAR_PATH);
+        let directory = Path::new(BOT_CAR_TEXTURE_PATH);
 
         if directory.is_dir() {
             for entry in (std::fs::read_dir(directory)?).flatten() {
@@ -48,10 +48,8 @@ impl BotCar {
         }
     }
 
-    pub fn update_position(&mut self, delta_time: f32) -> RustyResult<()>
-    {
+    pub fn update_position(&mut self, delta_time: f32) {
         self.x_position -= self.speed * delta_time;
-        Ok(())
     }
 
     pub fn is_out_of_screen(&self) -> bool {

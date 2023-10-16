@@ -1,5 +1,7 @@
 use macroquad::prelude::{draw_texture, FileError, load_texture, screen_width, Texture2D, Vec2, WHITE};
 
+const ROAD_TEXTURE_PATH: &str = "assets/road.png";
+
 #[derive(Clone)]
 pub struct Background {
     pub texture: Texture2D,
@@ -9,7 +11,7 @@ pub struct Background {
 
 impl Background {
     pub async fn new() -> Result<Background, FileError> {
-        let background_texture = load_texture("assets/road.png").await?;
+        let background_texture = load_texture(ROAD_TEXTURE_PATH).await?;
         Ok(Background {
             texture: background_texture,
             position: Vec2::new(0.0, 0.0),

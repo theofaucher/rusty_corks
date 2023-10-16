@@ -14,6 +14,7 @@ const ENTER_TEXT_SIZE: f32 = 30.0;
 const RESTART_MESSAGE: &str = "Press Space to start";
 const COLLISION_SIZE: f32 = 50.0;
 
+const COLLISION_TEXTURE_PATH: &str = "assets/collision.png";
 #[derive(Clone)]
 pub struct GraphicsManager {
     pub background: Background,
@@ -23,7 +24,7 @@ pub struct GraphicsManager {
 impl GraphicsManager {
     pub async fn new() -> RustyResult<GraphicsManager> {
         let background = Background::new().await?;
-        let collision = load_texture("assets/collision.png").await?;
+        let collision = load_texture(COLLISION_TEXTURE_PATH).await?;
         Ok(GraphicsManager {
             background,
             collision,

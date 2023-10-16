@@ -2,6 +2,7 @@ use macroquad::prelude::{FileError, load_texture, Texture2D};
 
 use crate::game::car::{Car, Way};
 
+const PLAYER_CAR_PATH: &str = "assets/cars/playerCar.png";
 #[derive(Clone)]
 pub struct PlayerCar {
     texture: Texture2D,
@@ -10,7 +11,7 @@ pub struct PlayerCar {
 
 impl PlayerCar {
     pub async fn new() -> Result<PlayerCar, FileError> {
-        let background_texture = load_texture("assets/playerCar.png").await?;
+        let background_texture = load_texture(PLAYER_CAR_PATH).await?;
         Ok(PlayerCar {
             texture: background_texture,
             way: Way::Center,
