@@ -19,6 +19,8 @@ const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
     (KeyCode::Down as usize, Way::Center, Way::Lower),
 ];
 
+const START_GAME_SPEED: f32 = 300.0;
+
 #[derive(Clone, PartialEq)]
 enum GameState {
     NotStarted,
@@ -31,10 +33,10 @@ pub struct Game {
     graphics_manager: GraphicsManager,
     pub player_car: PlayerCar,
     bot_manager: BotManager,
-    game_timer: Timer,
-    score: Arc<Mutex<u32>>,
+    speed_timer: Timer,
+    score: u32,
     session_record: u32,
-    speed: f32,
+    speed: Arc<Mutex<f32>>,
     game_state: GameState,
     game_previous_state: GameState,
 }
@@ -45,32 +47,33 @@ impl Game {
 
         let player_car = PlayerCar::new().await?;
 
-        let score = Arc::new(Mutex::new(0));
+        let score = 0;
 
-        let speed = 500.0;
+        let start_speed = Arc::new(Mutex::new(START_GAME_SPEED));
 
         Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
             graphics_manager,
             player_car,
-            bot_manager: BotManager::new(speed),
-            game_timer: Timer::new(Game::add_score, Arc::new(Mutex::new(TimerData::GameScore { score: Arc::clone(&score) }))),
-            score: Arc::clone(&score),
+            bot_manager: BotManager::new(Arc::clone(&start_speed)),
+            speed_timer: Timer::new(Game::speed_up, Arc::new(Mutex::new(TimerData::GameSpeed { speed: Arc::clone(&start_speed) }))),
+            score,
             session_record: 0,
-            speed,
+            speed: Arc::clone(&start_speed),
             game_state: GameState::NotStarted,
             game_previous_state: GameState::NotStarted,
         })
     }
 
     pub fn start(&mut self) -> RustyResult<()> {
-        let mut current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+        let mut current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
             message: format!("Impossible to lock the access to the current score: {}", e),
         }))?;
 
-        *current_score = 0;
+        *current_speed = START_GAME_SPEED;
+        self.score = 0;
 
-        self.game_timer.start(1000);
+        self.speed_timer.start(1000);
         self.game_state = GameState::Running;
 
         Ok(())
@@ -106,10 +109,11 @@ impl Game {
                 self.graphics_manager.draw_player_car(&self.player_car);
 
                 {
-                    let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
+                    let current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
                         message: format!("Impossible to lock the access to the current score: {}", e),
                     }))?;
-                    self.graphics_manager.draw_score(*current_score);
+                    self.score += (0.005 * *current_speed) as u32;
+                    self.graphics_manager.draw_score(self.score);
                 }
 
                 self.manage_bot_cars(delta_time).await?;
@@ -127,10 +131,6 @@ impl Game {
                     self.stop()?;
                 }
 
-                let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
-                    message: format!("Impossible to lock the access to the current score: {}", e),
-                }))?;
-
                 self.graphics_manager.background.draw();
 
                 for bot_car in self.bot_manager.bot_car_list.iter_mut() {
@@ -139,7 +139,7 @@ impl Game {
 
                 self.graphics_manager.draw_player_car(&self.player_car);
 
-                self.graphics_manager.draw_game_over(*current_score, self.session_record);
+                self.graphics_manager.draw_game_over(self.score, self.session_record);
 
                 if player_input == KeyCode::Enter {
                     self.game_state = GameState::NotStarted;
@@ -152,14 +152,10 @@ impl Game {
     }
 
     fn stop(&mut self) -> RustyResult<()> {
-        self.game_timer.stop();
+        self.speed_timer.stop();
 
-        let current_score = self.score.lock().map_err(|e| RustyLock(LockError {
-            message: format!("Impossible to lock the access to the current score: {}", e),
-        }))?;
-
-        if self.session_record < *current_score {
-            self.session_record = *current_score;
+        if self.session_record < self.score {
+            self.session_record = self.score;
         }
 
         Ok(())
@@ -190,14 +186,14 @@ impl Game {
         }
     }
 
-    fn add_score(timer_data: &mut TimerData) {
-        let TimerData::GameScore { score: game_score } = timer_data;
-        let game_score_lock = game_score.lock();
+    fn speed_up(timer_data: &mut TimerData) {
+        let TimerData::GameSpeed { speed: game_speed } = timer_data;
+        let game_speed_lock = game_speed.lock();
 
-        match game_score_lock {
-            Ok(mut init_score) => *init_score += 1,
+        match game_speed_lock {
+            Ok(mut init_speed) => *init_speed += 10.0,
             Err(e) => {
-                println!("Error lock current score: {}", e);
+                println!("Error lock current speed: {}", e);
             }
         };
     }
@@ -217,7 +213,7 @@ async fn manage_bot_cars(&mut self, delta_time: f32) -> RustyResult<()> {
     self.bot_manager.spawn_car().await?;
 
     for bot_car in self.bot_manager.bot_car_list.iter_mut() {
-        bot_car.update_position(delta_time);
+        bot_car.update_position(delta_time)?;
 
         if bot_car.is_colliding(&self.player_car) {
             self.game_state = GameState::GameOver;

@@ -8,7 +8,7 @@ type TimerCallback = fn(timer_data: &mut TimerData);
 
 #[derive(Clone)] // Ajoutez cette dérivation pour le trait Copy
 pub enum TimerData {
-    GameScore { score: Arc<Mutex<u32>> },
+    GameSpeed { speed: Arc<Mutex<f32>> },
 }
 
 pub struct Timer {
