@@ -1,23 +1,21 @@
-use std::sync::{Arc, Mutex};
-
 use macroquad::prelude::{load_texture, screen_width, Texture2D};
 use rand::Rng;
 
 use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
 use crate::game::car::player_car::PlayerCar;
-use crate::utils::rusty_error::{LockError, RustyResult};
-use crate::utils::rusty_error::RustyError::RustyLock;
+use crate::game::game::START_GAME_SPEED;
+use crate::utils::rusty_error::RustyResult;
 
 #[derive(Clone)]
 pub struct BotCar {
     texture: Texture2D,
     way: Way,
     pub x_position: f32,
-    speed: Arc<Mutex<f32>>,
+    speed: f32,
 }
 
 impl BotCar {
-    pub async fn new(way: Way, speed: Arc<Mutex<f32>>) -> RustyResult<BotCar> {
+    pub async fn new(way: Way) -> RustyResult<BotCar> {
         let mut rng = rand::thread_rng();
         let path = match rng.gen_range(0..2) {
             0 => "assets/blackCar.png",
@@ -28,19 +26,16 @@ impl BotCar {
         Ok(BotCar {
             texture: car_texture,
             way,
-            speed,
+            speed: START_GAME_SPEED,
             x_position: screen_width(),
         })
     }
 
     pub fn update_position(&mut self, delta_time: f32) -> RustyResult<()>
-        {
-            let current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
-                message: format!("Impossible to lock the access to the current speed: {}", e),
-            }))?;
-            self.x_position -= *current_speed * delta_time;
-            Ok(())
-        }
+    {
+        self.x_position -= self.speed * delta_time;
+        Ok(())
+    }
 
     pub fn is_out_of_screen(&self) -> bool {
         self.x_position < -screen_width() - BOT_CAR_WIDTH
@@ -51,6 +46,10 @@ impl BotCar {
             return Some((self.way, self.x_position));
         }
         ret
+    }
+
+    pub fn set_speed(&mut self, speed: f32) {
+        self.speed = speed;
     }
 }
 

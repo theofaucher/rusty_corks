@@ -19,7 +19,7 @@ const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
     (KeyCode::S as usize, Way::Center, Way::Lower),
 ];
 
-const START_GAME_SPEED: f32 = 300.0;
+pub const START_GAME_SPEED: f32 = 300.0;
 
 #[derive(Clone, PartialEq)]
 enum GameState {
@@ -68,14 +68,9 @@ impl Game {
     }
 
     pub fn start(&mut self) -> RustyResult<()> {
-        let mut current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
-            message: format!("Impossible to lock the access to the current score: {}", e),
-        }))?;
-
-        *current_speed = START_GAME_SPEED;
         self.score = 0;
 
-        self.speed_timer.start(1000);
+        self.speed_timer.start(100);
         self.game_state = GameState::Running;
 
         Ok(())
@@ -116,16 +111,18 @@ impl Game {
                     }))?;
                     self.score += (0.005 * *current_speed) as u32;
                     self.graphics_manager.draw_score(self.score);
+
+                    self.graphics_manager.background.set_speed(*current_speed);
+                    for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+                        self.graphics_manager.draw_bot_car(bot_car);
+                        bot_car.set_speed(*current_speed);
+                    }
                 }
 
                 let car_colliding = self.manage_bot_cars(delta_time).await?;
                 if let Some((way, x_position)) = car_colliding {
                     self.game_state = GameState::GameOver;
                     self.game_over_collision = Some((way, x_position));
-                }
-
-                for bot_car in self.bot_manager.bot_car_list.iter_mut() {
-                    self.graphics_manager.draw_bot_car(bot_car);
                 }
 
                 if player_input == KeyCode::Enter {
@@ -153,6 +150,14 @@ impl Game {
 
                 if player_input == KeyCode::Space {
                     self.game_state = GameState::NotStarted;
+
+                    let mut current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
+                        message: format!("Impossible to lock the access to the current score: {}", e),
+                    }))?;
+
+                    *current_speed = START_GAME_SPEED;
+                    self.graphics_manager.background.set_speed(*current_speed);
+
                     self.bot_manager.bot_car_list.clear();
                 }
             }
@@ -201,7 +206,7 @@ impl Game {
         let game_speed_lock = game_speed.lock();
 
         match game_speed_lock {
-            Ok(mut init_speed) => *init_speed += 10.0,
+            Ok(mut init_speed) => *init_speed += 1.0,
             Err(e) => {
                 println!("Error lock current speed: {}", e);
             }

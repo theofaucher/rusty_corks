@@ -13,7 +13,7 @@ impl Background {
         Ok(Background {
             texture: background_texture,
             position: Vec2::new(0.0, 0.0),
-            speed: 300.0, // Réglez la vitesse de déplacement selon vos préférences
+            speed: 300.0,
         })
     }
 
@@ -30,5 +30,9 @@ impl Background {
         }
 
         self.draw();
+    }
+
+    pub fn set_speed(&mut self, speed: f32) {
+        self.speed = speed;
     }
 }

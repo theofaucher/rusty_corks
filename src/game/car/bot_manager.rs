@@ -53,7 +53,7 @@ impl BotManager {
         let lane = &self.lanes[lane_pos];
         if self.is_lane_free(lane)? {
             // Créez un nouvelle voiture et ajoutez-le à la voie
-            let bot_car = BotCar::new(lane.way, Arc::clone(&self.game_speed)).await?;
+            let bot_car = BotCar::new(lane.way).await?;
             self.bot_car_list.push(bot_car);
 
             self.lanes[way_idx].last_spawn_time = Instant::now();
