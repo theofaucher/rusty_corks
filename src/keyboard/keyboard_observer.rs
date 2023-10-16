@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
 use std::thread;
@@ -12,7 +12,7 @@ use crate::keyboard::key_game::KeyGame;
 const KEY_GAME: [KeyCode; 5] = [KeyCode::Z, KeyCode::S, KeyCode::Space, KeyCode::Escape, KeyCode::Enter];
 
 pub struct KeyboardObserver {
-    sender: Arc<Mutex<Sender<KeyCode>>>,
+    sender: Sender<KeyCode>,
     keys_games: Vec<KeyGame>,
     pub running: Arc<AtomicBool<>>,
     thread: Option<JoinHandle<()>>,
@@ -26,14 +26,14 @@ impl KeyboardObserver {
         }
 
         KeyboardObserver {
-            sender: Arc::new(Mutex::new(sender_key)),
+            sender: sender_key,
             keys_games,
             running: Arc::new(AtomicBool::new(true)),
             thread: None,
         }
     }
 
-    fn observer(keys_games: &[KeyGame], sender: &Arc<Mutex<Sender<KeyCode>>>) {
+    fn observer(keys_games: &[KeyGame], sender: &Sender<KeyCode>) {
         let mut key_pressed: Option<KeyCode> = None;
         for key_games in keys_games.iter() {
             if key_games.is_key_pressed() {
@@ -43,24 +43,15 @@ impl KeyboardObserver {
         }
 
         if let Some(key) = key_pressed {
-            let send_status_lock = sender.lock();
-
-            match send_status_lock {
-                Ok(send_status) => {
-                    let send_status = send_status.send(key);
-                    if let Err(e) = send_status {
-                        println!("Error sending key: {}", e);
-                    }
-                }
-                Err(e) => {
-                    println!("Error sending key: {}", e);
-                }
+            let send_status = sender.send(key);
+            if let Err(e) = send_status {
+                println!("Error sending key: {}", e);
             }
         }
     }
 
     pub fn start_observer(&mut self) {
-        let sender_clone = Arc::clone(&self.sender);
+        let sender_clone = self.sender.clone();
         let running_clone = Arc::clone(&self.running);
         let mut keys_games_clone = self.keys_games.clone();
 
