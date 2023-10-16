@@ -13,10 +13,10 @@ use crate::utils::rusty_error::RustyError::RustyLock;
 use crate::utils::timer::{Timer, TimerData};
 
 const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
-    (KeyCode::Up as usize, Way::Center, Way::Upper),
-    (KeyCode::Up as usize, Way::Lower, Way::Center),
-    (KeyCode::Down as usize, Way::Upper, Way::Center),
-    (KeyCode::Down as usize, Way::Center, Way::Lower),
+    (KeyCode::Z as usize, Way::Center, Way::Upper),
+    (KeyCode::Z as usize, Way::Lower, Way::Center),
+    (KeyCode::S as usize, Way::Upper, Way::Center),
+    (KeyCode::S as usize, Way::Center, Way::Lower),
 ];
 
 const START_GAME_SPEED: f32 = 300.0;
@@ -39,6 +39,7 @@ pub struct Game {
     speed: Arc<Mutex<f32>>,
     game_state: GameState,
     game_previous_state: GameState,
+    game_over_collision: Option<(Way, f32)>,
 }
 
 impl Game {
@@ -62,6 +63,7 @@ impl Game {
             speed: Arc::clone(&start_speed),
             game_state: GameState::NotStarted,
             game_previous_state: GameState::NotStarted,
+            game_over_collision: None,
         })
     }
 
@@ -95,7 +97,7 @@ impl Game {
 
         match self.game_state {
             GameState::NotStarted => {
-                if player_input == KeyCode::Enter {
+                if player_input == KeyCode::Space {
                     self.start()?;
                 } else {
                     self.graphics_manager.background.move_texture(delta_time);
@@ -116,7 +118,11 @@ impl Game {
                     self.graphics_manager.draw_score(self.score);
                 }
 
-                self.manage_bot_cars(delta_time).await?;
+                let car_colliding = self.manage_bot_cars(delta_time).await?;
+                if let Some((way, x_position)) = car_colliding {
+                    self.game_state = GameState::GameOver;
+                    self.game_over_collision = Some((way, x_position));
+                }
 
                 for bot_car in self.bot_manager.bot_car_list.iter_mut() {
                     self.graphics_manager.draw_bot_car(bot_car);
@@ -139,9 +145,13 @@ impl Game {
 
                 self.graphics_manager.draw_player_car(&self.player_car);
 
+                if let Some(collision_position) = self.game_over_collision {
+                    self.graphics_manager.draw_collision(collision_position.0, collision_position.1);
+                }
+
                 self.graphics_manager.draw_game_over(self.score, self.session_record);
 
-                if player_input == KeyCode::Enter {
+                if player_input == KeyCode::Space {
                     self.game_state = GameState::NotStarted;
                     self.bot_manager.bot_car_list.clear();
                 }
@@ -209,21 +219,22 @@ impl Game {
         destination_way
     }
 
-async fn manage_bot_cars(&mut self, delta_time: f32) -> RustyResult<()> {
-    self.bot_manager.spawn_car().await?;
+    async fn manage_bot_cars(&mut self, delta_time: f32) -> RustyResult<Option<(Way, f32)>> {
+        self.bot_manager.spawn_car().await?;
+        let mut is_colliding: Option<(Way, f32)> = None;
 
-    for bot_car in self.bot_manager.bot_car_list.iter_mut() {
-        bot_car.update_position(delta_time)?;
-
-        if bot_car.is_colliding(&self.player_car) {
-            self.game_state = GameState::GameOver;
-            break;
+        for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+            bot_car.update_position(delta_time)?;
+            is_colliding = bot_car.is_colliding(&self.player_car);
+            if is_colliding.is_some() {
+                break;
+            }
         }
-    }
 
-    self.bot_manager.bot_car_list.retain(|bot_car| {
-        !bot_car.is_out_of_screen()
-    });
-    Ok(())
-}
+        self.bot_manager.bot_car_list.retain(|bot_car| {
+            !bot_car.is_out_of_screen()
+        });
+
+        Ok(is_colliding)
+    }
 }

@@ -45,10 +45,10 @@ impl BotCar {
     pub fn is_out_of_screen(&self) -> bool {
         self.x_position < -screen_width() - BOT_CAR_WIDTH
     }
-    pub fn is_colliding(&self, player_car: &PlayerCar) -> bool {
-        let mut ret = false;
-        if player_car.get_way() == self.way {
-            ret = (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH));
+    pub fn is_colliding(&self, player_car: &PlayerCar) -> Option<(Way, f32)> {
+        let ret = None;
+        if player_car.get_way() == self.way && (self.x_position < (PLAYER_CAR_X_POSITION + PLAYER_CAR_WIDTH)) && (self.x_position > (PLAYER_CAR_X_POSITION - BOT_CAR_WIDTH)) {
+            return Some((self.way, self.x_position));
         }
         ret
     }
