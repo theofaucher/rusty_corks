@@ -11,7 +11,10 @@ use crate::utils::rusty_error::RustyResult;
 
 const RUSTY_CORKS_TEXT_SIZE: f32 = 60.0;
 const ENTER_TEXT_SIZE: f32 = 30.0;
-const RESTART_MESSAGE: &str = "Press Space to start";
+const START_MESSAGE: &str = "Press Space to start";
+
+const RESUME_MESSAGE: &str = "Press Space to resume";
+
 const COLLISION_SIZE: f32 = 50.0;
 
 const COLLISION_TEXTURE_PATH: &str = "assets/collision.png";
@@ -77,6 +80,7 @@ impl GraphicsManager {
                   (screen_height() / 2.0) - 10.0,
                   35.0,
                   WHITE);
+
         let score_record_text = format!("Session record: {}", session_record);
         text_size = measure_text(&score_record_text, None, ENTER_TEXT_SIZE as u16, 1.0);
         draw_text(&score_record_text,
@@ -85,10 +89,41 @@ impl GraphicsManager {
                   35.0,
                   WHITE);
 
-        draw_text("Press Space to restart",
-                  (screen_width() / 2.0) - 150.0,
+        text_size = measure_text(START_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(START_MESSAGE,
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
                   (screen_height() / 2.0) + 100.0,
-                  30.0,
+                  ENTER_TEXT_SIZE,
+                  WHITE);
+    }
+
+    pub fn draw_pause(&self, session_record: u32) {
+        draw_rectangle((screen_width() / 2.0) - (500.0 / 2.0),
+                       (screen_height() / 2.0) - (250.0 / 2.0),
+                       500.0,
+                       250.0,
+                       Color::new(0.5, 0.5, 0.5, 0.5));
+
+        let mut text_size = measure_text("Pause", None, RUSTY_CORKS_TEXT_SIZE as u16, 1.0);
+        draw_text("Pause",
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) - 50.0,
+                  RUSTY_CORKS_TEXT_SIZE,
+                  WHITE);
+
+        let score_record_text = format!("Session record: {}", session_record);
+        text_size = measure_text(&score_record_text, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(&score_record_text,
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) - 10.0,
+                  35.0,
+                  WHITE);
+
+        let text_size = measure_text(RESUME_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(RESUME_MESSAGE,
+                  (screen_width() / 2.0) - (text_size.width / 2.0),
+                  (screen_height() / 2.0) + 100.0,
+                  ENTER_TEXT_SIZE,
                   WHITE);
     }
 
@@ -102,8 +137,8 @@ impl GraphicsManager {
                   RUSTY_CORKS_TEXT_SIZE,
                   WHITE);
 
-        let text_size = measure_text(RESTART_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
-        draw_text(RESTART_MESSAGE,
+        let text_size = measure_text(START_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(START_MESSAGE,
                   (screen_width() / 2.0) - (text_size.width / 2.0),
                   (screen_height() / 2.0) - (text_size.height / 2.0) + 20.0,
                   ENTER_TEXT_SIZE,

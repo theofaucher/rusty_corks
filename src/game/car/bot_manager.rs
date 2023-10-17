@@ -1,12 +1,14 @@
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 
+use macroquad::prelude::screen_width;
 use rand::Rng;
 
 use crate::game::car::bot_car::BotCar;
+use crate::game::car::Car;
 use crate::game::car::Way;
-use crate::utils::rusty_error::{LockError, RustyResult};
-use crate::utils::rusty_error::RustyError::{LaneNotFound, RustyLock};
+use crate::game::game::DISTANCE_BETWEEN_CARS;
+use crate::utils::rusty_error::RustyResult;
+use crate::utils::rusty_error::RustyError::LaneNotFound;
 
 pub struct BotManager {
     pub bot_car_list: Vec<BotCar>,
@@ -17,7 +19,6 @@ pub struct BotManager {
 #[derive(PartialEq)]
 struct Lane {
     way: Way,
-    last_spawn_time: Instant,
 }
 
 impl BotManager {
@@ -27,15 +28,12 @@ impl BotManager {
             lanes: [
                 Lane {
                     way: Way::Upper,
-                    last_spawn_time: Instant::now(),
                 },
                 Lane {
                     way: Way::Center,
-                    last_spawn_time: Instant::now(),
                 },
                 Lane {
                     way: Way::Lower,
-                    last_spawn_time: Instant::now(),
                 },
             ],
             game_speed,
@@ -56,20 +54,22 @@ impl BotManager {
             let bot_car = BotCar::new(lane.way).await?;
             self.bot_car_list.push(bot_car);
 
-            self.lanes[way_idx].last_spawn_time = Instant::now();
         }
         Ok(())
     }
     fn is_lane_recently_used(&self, lane: &Lane) -> RustyResult<bool> {
         // Vérifiez si la voie a été utilisée récemment en vérifiant
         // le temps écoulé depuis la dernière apparition d'un objet dans la voie.
-        let now = Instant::now();
-        let elapsed_time = now.duration_since(lane.last_spawn_time);
-        let current_speed = self.game_speed.lock().map_err(|e| RustyLock(LockError {
-            message: format!("Impossible to lock the access to the current speed: {}", e),
-        }))?;
-        let ret = elapsed_time.as_millis() < ((4600.0 / *current_speed) * 100.0) as u128;
-        Ok(ret)
+
+        let mut recently_used = false;
+
+        for bot_car in &self.bot_car_list {
+            if (screen_width() - bot_car.x_position) < (screen_width() / DISTANCE_BETWEEN_CARS) && bot_car.get_way() == lane.way {
+                recently_used = true;
+                break;
+            }
+        }
+        Ok(recently_used)
     }
     fn is_lane_free(&self, lane: &Lane) -> RustyResult<bool> {
         let ret;

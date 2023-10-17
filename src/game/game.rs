@@ -20,11 +20,13 @@ const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
 ];
 
 pub const START_GAME_SPEED: f32 = 300.0;
+pub const DISTANCE_BETWEEN_CARS: f32 = 2.5;
 
 #[derive(Clone, PartialEq)]
 enum GameState {
     NotStarted,
     Running,
+    Pause,
     GameOver,
 }
 
@@ -67,22 +69,17 @@ impl Game {
         })
     }
 
-    pub fn start(&mut self) -> RustyResult<()> {
+    pub fn start(&mut self) {
         self.score = 0;
 
         self.speed_timer.start(100);
         self.game_state = GameState::Running;
-
-        Ok(())
     }
 
     pub async fn run(&mut self) -> RustyResult<bool> {
         let player_input = self.get_keyboard_input()?;
 
-        if player_input == KeyCode::Escape {
-            if self.game_state == GameState::Running {
-                self.stop()?;
-            }
+        if player_input == KeyCode::Escape && self.game_state != GameState::Running {
             return Ok(true);
         }
 
@@ -93,7 +90,7 @@ impl Game {
         match self.game_state {
             GameState::NotStarted => {
                 if player_input == KeyCode::Space {
-                    self.start()?;
+                    self.start();
                 } else {
                     self.graphics_manager.background.move_texture(delta_time);
                     self.graphics_manager.draw_new_game();
@@ -106,9 +103,10 @@ impl Game {
                     let current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
                         message: format!("Impossible to lock the access to the current score: {}", e),
                     }))?;
+
                     self.score += (0.005 * *current_speed) as u32;
 
-                    self.graphics_manager.background.set_speed(*current_speed);
+                    self.graphics_manager.background.set_speed(*current_speed * 0.8);
                     self.graphics_manager.background.move_texture(delta_time);
                     for bot_car in self.bot_manager.bot_car_list.iter_mut() {
                         self.graphics_manager.draw_bot_car(bot_car);
@@ -127,6 +125,28 @@ impl Game {
 
                 if player_input == KeyCode::Enter {
                     self.game_state = GameState::GameOver;
+                } else if player_input == KeyCode::Space {
+                    self.game_state = GameState::Pause;
+                }
+            }
+            GameState::Pause => {
+                if entrance {
+                    self.speed_timer.stop();
+                }
+
+                self.graphics_manager.background.draw();
+                self.graphics_manager.draw_score(self.score);
+
+                for bot_car in self.bot_manager.bot_car_list.iter_mut() {
+                    self.graphics_manager.draw_bot_car(bot_car);
+                }
+
+                self.graphics_manager.draw_player_car(&self.player_car);
+                self.graphics_manager.draw_pause(self.session_record);
+
+                if player_input == KeyCode::Space {
+                    self.game_state = GameState::Running;
+                    self.speed_timer.start(100);
                 }
             }
             GameState::GameOver => {
@@ -206,7 +226,9 @@ impl Game {
         let game_speed_lock = game_speed.lock();
 
         match game_speed_lock {
-            Ok(mut init_speed) => *init_speed += 1.0,
+            Ok(mut init_speed) => {
+                *init_speed += 1.0;
+            },
             Err(e) => {
                 println!("Error lock current speed: {}", e);
             }
