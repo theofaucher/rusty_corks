@@ -13,7 +13,7 @@ pub enum SoundType {
 
 const SOUND_FILE_FOR_SOUND_TYPE: [(usize, &str, f32); 3] = [
     (SoundType::Menu as usize, "assets/musics/music_menu.wav", 1.0),
-    (SoundType::Game as usize, "assets/musics/music_menu.wav", 1.0),
+    (SoundType::Game as usize, "assets/musics/game_music.wav", 1.0),
     (SoundType::GameOver as usize, "assets/musics/game_over_sound.wav", 1.0),
 ];
 
