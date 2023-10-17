@@ -2,11 +2,13 @@ use macroquad::prelude::{Color, draw_text, draw_texture, load_texture, screen_he
 use macroquad::shapes::draw_rectangle;
 use macroquad::text::measure_text;
 
+use crate::config::KEY_GAME;
 use crate::game::car::{Car, PLAYER_CAR_HEIGHT, Way};
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::graphics::background::Background;
 use crate::GAME_NAME;
+use crate::utils::get_str_from_key_code;
 use crate::utils::rusty_error::RustyResult;
 
 const RUSTY_CORKS_TEXT_SIZE: f32 = 60.0;
@@ -18,6 +20,7 @@ const RESUME_MESSAGE: &str = "Press Space to resume";
 const COLLISION_SIZE: f32 = 50.0;
 
 const COLLISION_TEXTURE_PATH: &str = "assets/collision.png";
+
 #[derive(Clone)]
 pub struct GraphicsManager {
     pub background: Background,
@@ -46,7 +49,6 @@ impl GraphicsManager {
             }
         }
     }
-
     pub fn draw_bot_car(&self, bot_car: &BotCar) {
         self.draw_depending_way(bot_car.get_texture(), &bot_car.get_way(), bot_car.x_position, PLAYER_CAR_HEIGHT);
     }
@@ -89,7 +91,6 @@ impl GraphicsManager {
                   35.0,
                   WHITE);
 
-        text_size = measure_text(START_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
         draw_text(START_MESSAGE,
                   (screen_width() / 2.0) - (text_size.width / 2.0),
                   (screen_height() / 2.0) + 100.0,
@@ -130,22 +131,42 @@ impl GraphicsManager {
     pub fn draw_new_game(&self) {
         draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.5, 0.5, 0.5, 0.5));
 
-        let text_size = measure_text(GAME_NAME, None, RUSTY_CORKS_TEXT_SIZE as u16, 1.0);
+        let mut text_size = measure_text(GAME_NAME, None, RUSTY_CORKS_TEXT_SIZE as u16, 1.0);
         draw_text(GAME_NAME,
                   (screen_width() / 2.0) - (text_size.width / 2.0),
-                  (screen_height() / 2.0) - (text_size.height / 2.0),
+                  (screen_height() / 2.0) - (text_size.height / 2.0) - 120.0,
                   RUSTY_CORKS_TEXT_SIZE,
                   WHITE);
 
-        let text_size = measure_text(START_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
+        text_size = measure_text(START_MESSAGE, None, ENTER_TEXT_SIZE as u16, 1.0);
         draw_text(START_MESSAGE,
                   (screen_width() / 2.0) - (text_size.width / 2.0),
-                  (screen_height() / 2.0) - (text_size.height / 2.0) + 20.0,
+                  (screen_height() / 2.0) - (text_size.height / 2.0) - 100.0,
                   ENTER_TEXT_SIZE,
                   WHITE);
+
+        draw_rectangle(screen_width() / 2.0 - (500.0 / 2.0), screen_height() / 2.0 - (180.0 / 2.0), 500.0, 250.0, Color::new(0.3, 0.3, 0.3, 0.8));
+        let text = "Controls";
+        text_size = measure_text(text, None, ENTER_TEXT_SIZE as u16, 1.0);
+        draw_text(text,
+                  screen_width() / 2.0 - (text_size.width / 2.0),
+                  screen_height() / 2.0 - (text_size.height / 2.0) - 50.0,
+                  ENTER_TEXT_SIZE,
+                  WHITE);
+
+        GraphicsManager::draw_key_binds(screen_width() / 2.0, screen_height() / 2.0 - (text_size.height / 2.0) - 50.0, ENTER_TEXT_SIZE, WHITE);
     }
 
     pub fn draw_collision(&self, way: Way, x: f32) {
         self.draw_depending_way(self.collision, &way, x - COLLISION_SIZE / 2.0, COLLISION_SIZE);
+    }
+
+    fn draw_key_binds(x: f32, y: f32, font_size: f32, color: Color) {
+        let mut y_offset = 0.0;
+        for key in KEY_GAME {
+            let text = format!("{} : {}", key.1, get_str_from_key_code(key.0));
+            draw_text(&text, x, y + y_offset, font_size, color);
+            y_offset += font_size;
+        }
     }
 }

@@ -13,7 +13,7 @@ pub const DISTANCE_BETWEEN_CARS: f32 = 2.5;
 
 // Keyboard settings
 pub const KEY_GAME: [(KeyCode, &str); 5] = [
-    (KeyCode::Z, "Monter avec : {}"),
+    (KeyCode::Z, "Monter avec : "),
     (KeyCode::S, "Descendre avec : "),
     (KeyCode::Space, "Mettre en pause ou reprendre avec : "),
     (KeyCode::Escape, "Quitter avec : "),
