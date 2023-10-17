@@ -54,7 +54,7 @@ const KEY_CODE_WITH_STRING: [(KeyCode, &str); 121] = [
     (KeyCode::GraveAccent, "GraveAccent"),
     (KeyCode::World1, "World1"),
     (KeyCode::World2, "World2"),
-    (KeyCode::Escape, "Espace"),
+    (KeyCode::Escape, "Escape"),
     (KeyCode::Enter, "Enter"),
     (KeyCode::Tab, "Tab"),
     (KeyCode::Backspace, "Backspace"),

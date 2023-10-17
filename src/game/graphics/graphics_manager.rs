@@ -1,5 +1,5 @@
-use macroquad::prelude::{Color, draw_text, draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
-use macroquad::shapes::draw_rectangle;
+use macroquad::prelude::{Color, draw_line, draw_text, draw_texture, load_texture, screen_height, screen_width, Texture2D, WHITE};
+use macroquad::shapes::{draw_rectangle, draw_rectangle_lines};
 use macroquad::text::measure_text;
 
 use crate::config::KEY_GAME;
@@ -145,16 +145,23 @@ impl GraphicsManager {
                   ENTER_TEXT_SIZE,
                   WHITE);
 
-        draw_rectangle(screen_width() / 2.0 - (500.0 / 2.0), screen_height() / 2.0 - (180.0 / 2.0), 500.0, 250.0, Color::new(0.3, 0.3, 0.3, 0.8));
+        draw_rectangle_lines(screen_width() / 2.0 - (500.0 / 2.0), screen_height() / 2.0 - (180.0 / 2.0), 500.0, 250.0, 5.0, Color::new(0.3, 0.3, 0.3, 0.8));
+
         let text = "Controls";
         text_size = measure_text(text, None, ENTER_TEXT_SIZE as u16, 1.0);
         draw_text(text,
                   screen_width() / 2.0 - (text_size.width / 2.0),
-                  screen_height() / 2.0 - (text_size.height / 2.0) - 50.0,
+                  screen_height() / 2.0 - (text_size.height / 2.0) - 40.0,
                   ENTER_TEXT_SIZE,
                   WHITE);
+        draw_line(screen_width() / 2.0 - (text_size.width / 2.0),
+                  screen_height() / 2.0 - (text_size.height / 2.0) - 37.0,
+                  screen_width() / 2.0 - (text_size.width / 2.0) + text_size.width,
+                  screen_height() / 2.0 - (text_size.height / 2.0) - 37.0,
+                  3.0,
+                  Color::new(1.0, 1.0, 1.0, 0.8));
 
-        GraphicsManager::draw_key_binds(screen_width() / 2.0, screen_height() / 2.0 - (text_size.height / 2.0) - 50.0, ENTER_TEXT_SIZE, WHITE);
+        GraphicsManager::draw_key_binds(screen_width() / 2.0, screen_height() / 2.0 - (text_size.height / 2.0), ENTER_TEXT_SIZE, WHITE);
     }
 
     pub fn draw_collision(&self, way: Way, x: f32) {
@@ -164,8 +171,9 @@ impl GraphicsManager {
     fn draw_key_binds(x: f32, y: f32, font_size: f32, color: Color) {
         let mut y_offset = 0.0;
         for key in KEY_GAME {
-            let text = format!("{} : {}", key.1, get_str_from_key_code(key.0));
-            draw_text(&text, x, y + y_offset, font_size, color);
+            let text = format!("{}{}", key.1, get_str_from_key_code(key.0));
+            let text_size = measure_text(&text, None, ENTER_TEXT_SIZE as u16, 1.0);
+            draw_text(&text, x - (text_size.width / 2.0), y - (text_size.height / 2.0) + y_offset, font_size, color);
             y_offset += font_size;
         }
     }
