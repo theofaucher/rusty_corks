@@ -8,6 +8,7 @@ use crate::game::car::{Car, Way};
 use crate::game::car::bot_manager::BotManager;
 use crate::game::car::player_car::PlayerCar;
 use crate::game::graphics::graphics_manager::GraphicsManager;
+use crate::game::sounds::sounds_manager::{SoundsManager, SoundType};
 use crate::utils::rusty_error::{LockError, RustyError, RustyResult};
 use crate::utils::rusty_error::RustyError::RustyLock;
 use crate::utils::timer::{Timer, TimerData};
@@ -22,7 +23,7 @@ const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
 pub const START_GAME_SPEED: f32 = 300.0;
 pub const DISTANCE_BETWEEN_CARS: f32 = 2.5;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Copy)]
 enum GameState {
     NotStarted,
     Running,
@@ -42,17 +43,21 @@ pub struct Game {
     game_state: GameState,
     game_previous_state: GameState,
     game_over_collision: Option<(Way, f32)>,
+    sounds_manager: SoundsManager,
 }
 
 impl Game {
     pub async fn new(receiver_key: Receiver<KeyCode>) -> RustyResult<Game> {
         let graphics_manager = GraphicsManager::new().await?;
+        let mut sounds_manager = SoundsManager::new().await?;
 
         let player_car = PlayerCar::new().await?;
 
         let score = 0;
 
         let start_speed = Arc::new(Mutex::new(START_GAME_SPEED));
+
+        sounds_manager.play_sound(SoundType::Menu);
 
         Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
@@ -66,6 +71,7 @@ impl Game {
             game_state: GameState::NotStarted,
             game_previous_state: GameState::NotStarted,
             game_over_collision: None,
+            sounds_manager,
         })
     }
 
@@ -86,10 +92,16 @@ impl Game {
         let delta_time = get_frame_time();
 
         let entrance: bool = self.game_state != self.game_previous_state;
+        self.game_previous_state = self.game_state;
 
         match self.game_state {
             GameState::NotStarted => {
+                if entrance {
+                    self.sounds_manager.play_sound(SoundType::Menu);
+                }
+
                 if player_input == KeyCode::Space {
+                    self.sounds_manager.stop_sound(SoundType::Menu);
                     self.start();
                 } else {
                     self.graphics_manager.background.move_texture(delta_time);
@@ -97,6 +109,10 @@ impl Game {
                 }
             }
             GameState::Running => {
+                if entrance {
+                    self.sounds_manager.play_sound(SoundType::Game);
+                }
+
                 self.move_player_car(player_input)?;
 
                 {
@@ -123,15 +139,21 @@ impl Game {
                     self.game_over_collision = Some((way, x_position));
                 }
 
-                if player_input == KeyCode::Enter {
-                    self.game_state = GameState::GameOver;
-                } else if player_input == KeyCode::Space {
-                    self.game_state = GameState::Pause;
+                if player_input == KeyCode::Enter || player_input == KeyCode::Space {
+                    self.sounds_manager.stop_sound(SoundType::Game);
+                    if player_input == KeyCode::Enter {
+                        self.game_state = GameState::GameOver;
+                    } else if player_input == KeyCode::Space {
+                        self.game_state = GameState::Pause;
+                    }
                 }
+
+
             }
             GameState::Pause => {
                 if entrance {
                     self.speed_timer.stop();
+                    self.sounds_manager.play_sound(SoundType::Menu);
                 }
 
                 self.graphics_manager.background.draw();
@@ -146,11 +168,13 @@ impl Game {
 
                 if player_input == KeyCode::Space {
                     self.game_state = GameState::Running;
+                    self.sounds_manager.stop_sound(SoundType::Menu);
                     self.speed_timer.start(100);
                 }
             }
             GameState::GameOver => {
                 if entrance {
+                    self.sounds_manager.play_sound(SoundType::GameOver);
                     self.stop()?;
                 }
 
@@ -170,6 +194,8 @@ impl Game {
 
                 if player_input == KeyCode::Space {
                     self.game_state = GameState::NotStarted;
+
+                    self.sounds_manager.stop_sound(SoundType::GameOver);
 
                     let mut current_speed = self.speed.lock().map_err(|e| RustyLock(LockError {
                         message: format!("Impossible to lock the access to the current score: {}", e),
