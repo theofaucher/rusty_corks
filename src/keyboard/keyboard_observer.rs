@@ -7,9 +7,8 @@ use std::time::{Duration, Instant};
 
 use macroquad::input::{is_key_down, KeyCode};
 
+use crate::config::KEY_GAME;
 use crate::keyboard::key_game::KeyGame;
-
-const KEY_GAME: [KeyCode; 6] = [KeyCode::Z, KeyCode::S, KeyCode::Space, KeyCode::Escape, KeyCode::Enter, KeyCode::M];
 
 pub struct KeyboardObserver {
     sender: Sender<KeyCode>,
@@ -22,7 +21,7 @@ impl KeyboardObserver {
     pub fn new(sender_key: Sender<KeyCode>) -> KeyboardObserver {
         let mut keys_games = Vec::new();
         for key in KEY_GAME.iter() {
-            keys_games.push(KeyGame::new(*key));
+            keys_games.push(KeyGame::new(key.0));
         }
 
         KeyboardObserver {

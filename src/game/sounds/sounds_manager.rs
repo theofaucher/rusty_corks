@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use macroquad::audio;
 
+use crate::config::SOUND_FILE_FOR_SOUND_TYPE;
 use crate::game::sounds::rusty_sound::RustySound;
 use crate::utils::rusty_error::RustyResult;
 
@@ -10,12 +11,6 @@ pub enum SoundType {
     Game,
     GameOver,
 }
-
-const SOUND_FILE_FOR_SOUND_TYPE: [(usize, &str, f32); 3] = [
-    (SoundType::Menu as usize, "assets/musics/menu_music.wav", 1.1),
-    (SoundType::Game as usize, "assets/musics/game_music.wav", 0.7),
-    (SoundType::GameOver as usize, "assets/musics/game_over_sound.wav", 1.0),
-];
 
 pub struct SoundsManager {
     sounds: HashMap<usize, RustySound>,

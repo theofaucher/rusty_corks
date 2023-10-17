@@ -1,10 +1,10 @@
 use macroquad::prelude::screen_width;
 use rand::Rng;
 
+use crate::config::DISTANCE_BETWEEN_CARS;
 use crate::game::car::bot_car::BotCar;
 use crate::game::car::Car;
 use crate::game::car::Way;
-use crate::game::game::DISTANCE_BETWEEN_CARS;
 use crate::utils::rusty_error::RustyError::LaneNotFound;
 use crate::utils::rusty_error::RustyResult;
 

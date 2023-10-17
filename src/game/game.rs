@@ -4,6 +4,7 @@ use std::sync::mpsc::Receiver;
 use macroquad::input::KeyCode;
 use macroquad::prelude::get_frame_time;
 
+use crate::config::START_GAME_SPEED;
 use crate::game::car::{Car, Way};
 use crate::game::car::bot_manager::BotManager;
 use crate::game::car::player_car::PlayerCar;
@@ -19,9 +20,6 @@ const PLAYER_INPUT_AND_CAR_REACTION: [(usize, Way, Way); 4] = [
     (KeyCode::S as usize, Way::Upper, Way::Center),
     (KeyCode::S as usize, Way::Center, Way::Lower),
 ];
-
-pub const START_GAME_SPEED: f32 = 300.0;
-pub const DISTANCE_BETWEEN_CARS: f32 = 2.5;
 
 #[derive(Clone, PartialEq, Copy)]
 enum GameState {
@@ -143,13 +141,9 @@ impl Game {
                     self.game_over_collision = Some((way, x_position));
                 }
 
-                if player_input == KeyCode::Enter || player_input == KeyCode::Space {
+                if player_input == KeyCode::Space {
                     self.sounds_manager.stop_sound(SoundType::Game);
-                    if player_input == KeyCode::Enter {
-                        self.game_state = GameState::GameOver;
-                    } else if player_input == KeyCode::Space {
-                        self.game_state = GameState::Pause;
-                    }
+                    self.game_state = GameState::Pause;
                 }
             }
             GameState::Pause => {
