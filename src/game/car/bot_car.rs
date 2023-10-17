@@ -5,7 +5,6 @@ use rand::Rng;
 
 use crate::game::car::{BOT_CAR_WIDTH, Car, PLAYER_CAR_WIDTH, PLAYER_CAR_X_POSITION, Way};
 use crate::game::car::player_car::PlayerCar;
-use crate::game::game::START_GAME_SPEED;
 use crate::utils::rusty_error::RustyResult;
 
 const BOT_CAR_TEXTURE_PATH: &str = "assets/cars/bots/";
@@ -23,14 +22,25 @@ impl BotCar {
         let mut png_path = Vec::new();
         let directory = Path::new(BOT_CAR_TEXTURE_PATH);
 
+        // Code complexe mais nous n'avons pas le choix
         if directory.is_dir() {
             for entry in (std::fs::read_dir(directory)?).flatten() {
                 let file = entry.path();
-                if file.is_file() && let Some(extension) = file.extension() && extension.to_string_lossy().to_lowercase() == "png" {
-                    png_path.push(file.as_path().to_string_lossy().to_string());
+                if file.is_file() {
+                    if let Some(extension) = file.extension() {
+                        if extension.to_string_lossy().to_lowercase() == "png" {
+                            png_path.push(file.as_path().to_string_lossy().to_string());
+                        }
+                    }
                 }
             }
         }
+
+        // if let Some(extension) = file.extension() {
+        //     if extension.to_string_lossy().to_lowercase() == "png" {
+        //         png_path.push(file.as_path().to_string_lossy().to_string());
+        //     }
+        // }
 
         let mut rng = rand::thread_rng();
         let texture_rng = png_path.get(rng.gen_range(0..png_path.len()));
@@ -40,7 +50,7 @@ impl BotCar {
             Ok(BotCar {
                 texture: car_texture,
                 way,
-                speed: START_GAME_SPEED,
+                speed: 0.0,
                 x_position: screen_width(),
             })
         } else {

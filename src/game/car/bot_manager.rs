@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use macroquad::prelude::screen_width;
 use rand::Rng;
 
@@ -7,12 +5,11 @@ use crate::game::car::bot_car::BotCar;
 use crate::game::car::Car;
 use crate::game::car::Way;
 use crate::game::game::DISTANCE_BETWEEN_CARS;
-use crate::utils::rusty_error::RustyResult;
 use crate::utils::rusty_error::RustyError::LaneNotFound;
+use crate::utils::rusty_error::RustyResult;
 
 pub struct BotManager {
     pub bot_car_list: Vec<BotCar>,
-    game_speed: Arc<Mutex<f32>>,
     lanes: [Lane; 3],
 }
 
@@ -22,7 +19,7 @@ struct Lane {
 }
 
 impl BotManager {
-    pub fn new(game_speed: Arc<Mutex<f32>>) -> BotManager {
+    pub fn new() -> BotManager {
         BotManager {
             bot_car_list: Vec::new(),
             lanes: [
@@ -36,7 +33,6 @@ impl BotManager {
                     way: Way::Lower,
                 },
             ],
-            game_speed,
         }
     }
     pub async fn spawn_car(&mut self) -> RustyResult<()> {

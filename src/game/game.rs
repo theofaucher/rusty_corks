@@ -58,7 +58,7 @@ impl Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
             graphics_manager,
             player_car,
-            bot_manager: BotManager::new(Arc::clone(&start_speed)),
+            bot_manager: BotManager::new(),
             speed_timer: Timer::new(Game::speed_up, Arc::new(Mutex::new(TimerData::GameSpeed { speed: Arc::clone(&start_speed) }))),
             score,
             session_record: 0,
