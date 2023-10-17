@@ -36,12 +36,6 @@ impl BotCar {
             }
         }
 
-        // if let Some(extension) = file.extension() {
-        //     if extension.to_string_lossy().to_lowercase() == "png" {
-        //         png_path.push(file.as_path().to_string_lossy().to_string());
-        //     }
-        // }
-
         let mut rng = rand::thread_rng();
         let texture_rng = png_path.get(rng.gen_range(0..png_path.len()));
 
