@@ -9,7 +9,7 @@ use macroquad::input::{is_key_down, KeyCode};
 
 use crate::keyboard::key_game::KeyGame;
 
-const KEY_GAME: [KeyCode; 5] = [KeyCode::Z, KeyCode::S, KeyCode::Space, KeyCode::Escape, KeyCode::Enter];
+const KEY_GAME: [KeyCode; 6] = [KeyCode::Z, KeyCode::S, KeyCode::Space, KeyCode::Escape, KeyCode::Enter, KeyCode::M];
 
 pub struct KeyboardObserver {
     sender: Sender<KeyCode>,

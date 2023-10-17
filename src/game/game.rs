@@ -57,7 +57,7 @@ impl Game {
 
         let start_speed = Arc::new(Mutex::new(START_GAME_SPEED));
 
-        sounds_manager.play_sound(SoundType::Menu);
+        sounds_manager.play_sound(SoundType::Menu, true);
 
         Ok(Game {
             receiver_input: Arc::new(Mutex::new(receiver_key)),
@@ -89,6 +89,10 @@ impl Game {
             return Ok(true);
         }
 
+        if player_input == KeyCode::M {
+            self.sounds_manager.set_mute_songs();
+        }
+
         let delta_time = get_frame_time();
 
         let entrance: bool = self.game_state != self.game_previous_state;
@@ -97,7 +101,7 @@ impl Game {
         match self.game_state {
             GameState::NotStarted => {
                 if entrance {
-                    self.sounds_manager.play_sound(SoundType::Menu);
+                    self.sounds_manager.play_sound(SoundType::Menu, true);
                 }
 
                 if player_input == KeyCode::Space {
@@ -110,7 +114,7 @@ impl Game {
             }
             GameState::Running => {
                 if entrance {
-                    self.sounds_manager.play_sound(SoundType::Game);
+                    self.sounds_manager.play_sound(SoundType::Game, true);
                 }
 
                 self.move_player_car(player_input)?;
@@ -147,13 +151,10 @@ impl Game {
                         self.game_state = GameState::Pause;
                     }
                 }
-
-
             }
             GameState::Pause => {
                 if entrance {
                     self.speed_timer.stop();
-                    self.sounds_manager.play_sound(SoundType::Menu);
                 }
 
                 self.graphics_manager.background.draw();
@@ -168,13 +169,13 @@ impl Game {
 
                 if player_input == KeyCode::Space {
                     self.game_state = GameState::Running;
-                    self.sounds_manager.stop_sound(SoundType::Menu);
                     self.speed_timer.start(100);
                 }
             }
             GameState::GameOver => {
                 if entrance {
-                    self.sounds_manager.play_sound(SoundType::GameOver);
+                    self.sounds_manager.stop_sound(SoundType::Game);
+                    self.sounds_manager.play_sound(SoundType::GameOver, false);
                     self.stop()?;
                 }
 

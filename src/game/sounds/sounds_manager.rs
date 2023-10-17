@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use macroquad::audio;
-use macroquad::audio::Sound;
 
+use crate::game::sounds::rusty_sound::RustySound;
 use crate::utils::rusty_error::RustyResult;
 
 pub enum SoundType {
@@ -12,36 +12,38 @@ pub enum SoundType {
 }
 
 const SOUND_FILE_FOR_SOUND_TYPE: [(usize, &str, f32); 3] = [
-    (SoundType::Menu as usize, "assets/musics/music_menu.wav", 1.0),
-    (SoundType::Game as usize, "assets/musics/game_music.wav", 1.0),
+    (SoundType::Menu as usize, "assets/musics/menu_music.wav", 1.1),
+    (SoundType::Game as usize, "assets/musics/game_music.wav", 0.7),
     (SoundType::GameOver as usize, "assets/musics/game_over_sound.wav", 1.0),
 ];
 
 pub struct SoundsManager {
-    sounds: HashMap<usize, (Sound, f32)>,
+    sounds: HashMap<usize, RustySound>,
+    sounds_muted: bool,
 }
 
 impl SoundsManager {
     pub async fn new() -> RustyResult<SoundsManager> {
-        let mut sounds: HashMap<usize, (Sound, f32)> = HashMap::new();
+        let mut sounds: HashMap<usize, RustySound> = HashMap::new();
         for &(sound_type, sound_file, sound_volume) in &SOUND_FILE_FOR_SOUND_TYPE {
-            let sound = audio::load_sound(sound_file).await?;
-            audio::set_sound_volume(sound, sound_volume);
-            sounds.insert(sound_type, (sound, sound_volume));
+            sounds.insert(sound_type, RustySound::new(sound_file, sound_volume).await?);
         }
 
         Ok(SoundsManager {
             sounds,
+            sounds_muted: false,
         })
     }
 
-    pub fn play_sound(&mut self, sound_type: SoundType) {
-        let sound = self.sounds.get(&(sound_type as usize));
+    pub fn play_sound(&mut self, sound_type: SoundType, play_loop: bool) {
+        let sound = self.sounds.get_mut(&(sound_type as usize));
         match sound {
             Some(sound) => {
-                audio::play_sound(sound.0, audio::PlaySoundParams {
-                    volume: sound.1,
-                    looped: true,
+                let volume = if self.sounds_muted { 0.0 } else { sound.volume };
+                sound.playing_status = true;
+                audio::play_sound(sound.sound, audio::PlaySoundParams {
+                    volume,
+                    looped: play_loop,
                 });
             }
             None => unreachable!(),
@@ -49,12 +51,24 @@ impl SoundsManager {
     }
 
     pub fn stop_sound(&mut self, sound_type: SoundType) {
-        let sound = self.sounds.get(&(sound_type as usize));
+        let sound = self.sounds.get_mut(&(sound_type as usize));
         match sound {
             Some(sound) => {
-                audio::stop_sound(sound.0);
+                sound.playing_status = false;
+                audio::stop_sound(sound.sound);
             }
             None => unreachable!(),
+        }
+    }
+
+    pub fn set_mute_songs(&mut self) {
+        for sound in self.sounds.values_mut() {
+            self.sounds_muted = !self.sounds_muted;
+            if self.sounds_muted {
+                audio::set_sound_volume(sound.sound, 0.0);
+            } else if !self.sounds_muted && sound.playing_status {
+                audio::set_sound_volume(sound.sound, sound.volume);
+            }
         }
     }
 }
