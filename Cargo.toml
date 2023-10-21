@@ -6,5 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# 0.4.4 is the actual last version of macroquad but it doesn't work with our game
 macroquad = "0.3.25"
 rand = "0.8"

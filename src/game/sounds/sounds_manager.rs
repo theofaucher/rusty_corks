@@ -6,6 +6,7 @@ use crate::config::SOUND_FILE_FOR_SOUND_TYPE;
 use crate::game::sounds::rusty_sound::RustySound;
 use crate::utils::rusty_error::RustyResult;
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SoundType {
     Menu,
     Game,
@@ -13,13 +14,13 @@ pub enum SoundType {
 }
 
 pub struct SoundsManager {
-    sounds: HashMap<usize, RustySound>,
+    sounds: HashMap<SoundType, RustySound>,
     sounds_muted: bool,
 }
 
 impl SoundsManager {
     pub async fn new() -> RustyResult<SoundsManager> {
-        let mut sounds: HashMap<usize, RustySound> = HashMap::new();
+        let mut sounds: HashMap<SoundType, RustySound> = HashMap::new();
         for &(sound_type, sound_file, sound_volume) in &SOUND_FILE_FOR_SOUND_TYPE {
             sounds.insert(sound_type, RustySound::new(sound_file, sound_volume).await?);
         }
@@ -31,7 +32,7 @@ impl SoundsManager {
     }
 
     pub fn play_sound(&mut self, sound_type: SoundType, play_loop: bool) {
-        let sound = self.sounds.get_mut(&(sound_type as usize));
+        let sound = self.sounds.get_mut(&(sound_type));
         match sound {
             Some(sound) => {
                 let volume = if self.sounds_muted { 0.0 } else { sound.volume };
@@ -46,7 +47,7 @@ impl SoundsManager {
     }
 
     pub fn stop_sound(&mut self, sound_type: SoundType) {
-        let sound = self.sounds.get_mut(&(sound_type as usize));
+        let sound = self.sounds.get_mut(&(sound_type));
         match sound {
             Some(sound) => {
                 sound.playing_status = false;

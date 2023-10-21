@@ -3,6 +3,7 @@ use macroquad::prelude::{FileError, load_texture, Texture2D};
 use crate::game::car::{Car, Way};
 
 const PLAYER_CAR_PATH: &str = "assets/cars/playerCar.png";
+
 #[derive(Clone)]
 pub struct PlayerCar {
     texture: Texture2D,

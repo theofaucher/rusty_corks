@@ -24,9 +24,9 @@ impl Background {
         draw_texture(self.texture, self.position.x + screen_width(), self.position.y, WHITE);
     }
     pub fn move_texture(&mut self, delta_time: f32) {
-        // Mettez à jour la position du fond
+        // Update background position
         self.position.x -= self.speed * delta_time;
-        // Créez un effet de boucle continue
+        // Create a continuous loop effect
         if self.position.x < -screen_width() {
             self.position.x = 0.0;
         }

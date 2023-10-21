@@ -8,17 +8,18 @@ use std::time::{Duration, Instant};
 use macroquad::input::{is_key_down, KeyCode};
 
 use crate::config::KEY_GAME;
+use crate::keyboard::{GameAction, get_game_action_from_key_code};
 use crate::keyboard::key_game::KeyGame;
 
 pub struct KeyboardObserver {
-    sender: Sender<KeyCode>,
+    sender: Sender<GameAction>,
     keys_games: Vec<KeyGame>,
     pub running: Arc<AtomicBool<>>,
     thread: Option<JoinHandle<()>>,
 }
 
 impl KeyboardObserver {
-    pub fn new(sender_key: Sender<KeyCode>) -> KeyboardObserver {
+    pub fn new(sender_key: Sender<GameAction>) -> KeyboardObserver {
         let mut keys_games = Vec::new();
         for key in KEY_GAME.iter() {
             keys_games.push(KeyGame::new(key.0));
@@ -32,7 +33,7 @@ impl KeyboardObserver {
         }
     }
 
-    fn observer(keys_games: &[KeyGame], sender: &Sender<KeyCode>) {
+    fn observer(keys_games: &[KeyGame], sender: &Sender<GameAction>) {
         let mut key_pressed: Option<KeyCode> = None;
         for key_games in keys_games.iter() {
             if key_games.is_key_pressed() {
@@ -42,9 +43,12 @@ impl KeyboardObserver {
         }
 
         if let Some(key) = key_pressed {
-            let send_status = sender.send(key);
-            if let Err(e) = send_status {
-                println!("Error sending key: {}", e);
+            let game_action = get_game_action_from_key_code(key);
+            if let Some(game_action) = game_action {
+                let send_status = sender.send(game_action);
+                if let Err(e) = send_status {
+                    println!("Error sending key: {}", e);
+                }
             }
         }
     }
