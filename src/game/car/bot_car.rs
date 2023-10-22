@@ -22,7 +22,7 @@ impl BotCar {
         let mut png_path = Vec::new();
         let directory = Path::new(BOT_CAR_TEXTURE_PATH);
 
-        // Code complexe mais nous n'avons pas le choix
+        // It is a complex code but we don't have the choice
         if directory.is_dir() {
             for entry in (std::fs::read_dir(directory)?).flatten() {
                 let file = entry.path();

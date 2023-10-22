@@ -67,11 +67,7 @@ impl GraphicsManager {
     }
 
     pub fn draw_game_over(&self, score: u32, session_record: u32) {
-        draw_rectangle((WINDOW_WIDTH / 2.0) - (500.0 / 2.0),
-                       (WINDOW_HEIGHT / 2.0) - (250.0 / 2.0),
-                       500.0,
-                       250.0,
-                       Color::new(0.5, 0.5, 0.5, 0.5));
+        GraphicsManager::draw_menu_rectangle();
 
         GraphicsManager::draw_centered_text("Game Over",
                                             (WINDOW_HEIGHT / 2.0) - 50.0,
@@ -95,11 +91,7 @@ impl GraphicsManager {
     }
 
     pub fn draw_pause(&self, session_record: u32) {
-        draw_rectangle((WINDOW_WIDTH / 2.0) - (500.0 / 2.0),
-                       (WINDOW_HEIGHT / 2.0) - (250.0 / 2.0),
-                       500.0,
-                       250.0,
-                       Color::new(0.5, 0.5, 0.5, 0.5));
+        GraphicsManager::draw_menu_rectangle();
 
         GraphicsManager::draw_centered_text("Pause",
                                             (WINDOW_HEIGHT / 2.0) - 50.0,
@@ -148,7 +140,16 @@ impl GraphicsManager {
         self.draw_depending_way(self.collision, &way, x - COLLISION_SIZE / 2.0, COLLISION_SIZE);
     }
 
+    fn draw_menu_rectangle() {
+        draw_rectangle((WINDOW_WIDTH / 2.0) - (500.0 / 2.0),
+                       (WINDOW_HEIGHT / 2.0) - (250.0 / 2.0),
+                       500.0,
+                       250.0,
+                       Color::new(0.5, 0.5, 0.5, 0.5));
+    }
+
     fn draw_key_text(game_action: GameAction) {
+        // Get the key for the game action
         let key_for_new_game = get_key_code_from_game_action(game_action);
         match key_for_new_game {
             Some(key) => {
@@ -159,12 +160,14 @@ impl GraphicsManager {
                                                     WHITE);
             },
             None => {
+                // Normally impossible, in the case of it is possible, we want to know it
                 unreachable!();
             }
         }
     }
 
     fn draw_centered_text(text: &str, y: f32, font_size: f32, color: Color) {
+        // Measure text size to center it
         let text_size = measure_text(text, None, font_size as u16, 1.0);
         draw_text(text, (WINDOW_WIDTH / 2.0) - (text_size.width / 2.0), y, font_size, color);
     }
@@ -172,11 +175,15 @@ impl GraphicsManager {
     fn draw_key_binds(x: f32, y: f32, font_size: f32, color: Color) {
         let mut y_offset = 0.0;
         for key in KEY_GAME {
+            // Get the action description from the game action
             let game_action = get_action_description_from_game_action(key.1);
             if let Some(game_action) = game_action {
+                // Format the game action with the key
                 let text = format!("{}{}", game_action, get_str_from_key_code(key.0));
                 let text_size = measure_text(&text, None, ENTER_TEXT_SIZE as u16, 1.0);
                 draw_text(&text, x - (text_size.width / 2.0), y - (text_size.height / 2.0) + y_offset, font_size, color);
+
+                // Add the offset to the next text
                 y_offset += font_size;
             }
         }

@@ -43,10 +43,12 @@ impl KeyboardObserver {
         }
 
         if let Some(key) = key_pressed {
+            // Convert key to game action and send it in the channel
             let game_action = get_game_action_from_key_code(key);
             if let Some(game_action) = game_action {
                 let send_status = sender.send(game_action);
                 if let Err(e) = send_status {
+                    // If a problem occurs, print the error and continue
                     println!("Error sending key: {}", e);
                 }
             }
@@ -64,16 +66,19 @@ impl KeyboardObserver {
 
 
             while running_clone.load(Ordering::Relaxed) {
+                // Detect if a key is pressed (falling edge)
                 for key_game in keys_games_clone.iter_mut() {
                     let is_down = is_key_down(key_game.key);
                     key_game.update(is_down);
                 }
 
+                // If a key is pressed (one per loop iteration), send it in the channel
                 KeyboardObserver::observer(&keys_games_clone, &sender_clone);
 
                 let elapsed_time = last_time.elapsed();
 
                 if elapsed_time < timer_duration {
+                    // Compute the remaining time to sleep
                     let sleep_time = timer_duration - elapsed_time;
                     sleep(sleep_time);
                 }

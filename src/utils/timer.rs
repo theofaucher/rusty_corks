@@ -4,8 +4,10 @@ use std::thread;
 use std::thread::{JoinHandle, sleep};
 use std::time::{Duration, Instant};
 
+// Pointer to a function used to be a "callback" function, call by the timer
 type TimerCallback = fn(timer_data: &mut TimerData);
 
+// Data used by the callback
 #[derive(Clone)]
 pub enum TimerData {
     GameSpeed { speed: Arc<Mutex<f32>> },
@@ -36,10 +38,11 @@ impl Timer {
         while running.load(Ordering::Relaxed) {
             let elapsed_time = last_time.elapsed();
 
+            // If the elapsed time is greater than the timer duration, we call the callback function
             if elapsed_time > timer_duration {
                 let execution_time: Instant = Instant::now();
-                let timer_data = timer_data.lock();
 
+                let timer_data = timer_data.lock();
                 match timer_data {
                     Ok(mut timer_data) => {
                         callback(&mut timer_data);
@@ -48,11 +51,13 @@ impl Timer {
                         println!("Error lock timer_data: {}", e);
                     }
                 }
+
                 let execution_time = execution_time.elapsed();
                 timer_duration = Duration::from_millis(delay as u64) - execution_time;
 
                 last_time = Instant::now();
             }
+            // Sleep 1ms to avoid using too much CPU resources
             sleep(Duration::from_millis(1));
         }
     }
