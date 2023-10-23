@@ -19,3 +19,17 @@ the faster they go!
 - Music is played in the background
 - Score is displayed in the top left corner
 - Game over screen is displayed when you lose 
+
+## How to play
+First, you need to clone the repository. \
+Install [rustup](https://www.rust-lang.org/tools/install) from the official website and run the following command:
+
+### If you want to build the game
+```bash
+cargo build --release
+```
+
+### If you want to run the game
+```bash
+cargo run --release
+```
