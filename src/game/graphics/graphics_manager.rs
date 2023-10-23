@@ -87,7 +87,7 @@ impl GraphicsManager {
                                             ENTER_TEXT_SIZE,
                                             WHITE);
 
-        GraphicsManager::draw_key_text(GameAction::PauseResume);
+        GraphicsManager::draw_key_text(GameAction::PauseResume, 100.0);
     }
 
     pub fn draw_pause(&self, session_record: u32) {
@@ -104,7 +104,7 @@ impl GraphicsManager {
                                             ENTER_TEXT_SIZE,
                                             WHITE);
 
-        GraphicsManager::draw_key_text(GameAction::PauseResume);
+        GraphicsManager::draw_key_text(GameAction::PauseResume, 100.0);
     }
 
     pub fn draw_new_game(&self) {
@@ -116,7 +116,7 @@ impl GraphicsManager {
                                             WHITE);
 
 
-        GraphicsManager::draw_key_text(GameAction::PauseResume);
+        GraphicsManager::draw_key_text(GameAction::PauseResume, 150.0);
 
         draw_rectangle_lines(WINDOW_WIDTH / 2.0 - (500.0 / 2.0), WINDOW_HEIGHT / 2.0 - (180.0 / 2.0), 500.0, 250.0, 5.0, Color::new(0.3, 0.3, 0.3, 0.8));
 
@@ -148,14 +148,14 @@ impl GraphicsManager {
                        Color::new(0.5, 0.5, 0.5, 0.5));
     }
 
-    fn draw_key_text(game_action: GameAction) {
+    fn draw_key_text(game_action: GameAction, y_offset: f32) {
         // Get the key for the game action
         let key_for_new_game = get_key_code_from_game_action(game_action);
         match key_for_new_game {
             Some(key) => {
                 let text_new_game = format!("{}{}", PLAY_MESSAGE, get_str_from_key_code(key));
                 GraphicsManager::draw_centered_text(text_new_game.as_str(),
-                                                    (WINDOW_HEIGHT / 2.0) + 100.0,
+                                                    (WINDOW_HEIGHT / 2.0) + y_offset,
                                                     ENTER_TEXT_SIZE,
                                                     WHITE);
             },
